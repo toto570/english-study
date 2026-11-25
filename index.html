@@ -1,0 +1,3374 @@
+<!DOCTYPE html>
+<html lang="ja" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#09090b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="英語フレーズ帳" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <title>英語記事 学習ノート＆復習テスト</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', sans-serif;
+      color-scheme: dark;
+    }
+    .speak-btn, .option-btn {
+      transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    }
+    .speak-btn:active, .option-btn:active:not(:disabled) {
+      transform: scale(0.985);
+    }
+    .nr-word {
+      transition: background-color 0.08s ease, color 0.08s ease;
+      border-radius: 0.25rem;
+      padding: 0 2px;
+    }
+    .nr-word-active {
+      background-color: rgba(16, 185, 129, 0.35);
+      color: #ecfdf5;
+      font-weight: 600;
+    }
+    .pb-safe {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    button, select {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen antialiased">
+  <div class="max-w-3xl mx-auto px-4 py-6 pb-36 sm:px-6 sm:py-8 sm:pb-40">
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-xl bg-zinc-800 border border-zinc-700 text-zinc-100 text-xs sm:text-sm font-medium shadow-xl"></div>
+
+    <!-- Header -->
+    <header class="mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          English Article Library
+        </span>
+        <div class="inline-flex rounded-lg bg-zinc-900 border border-zinc-800 p-1 text-xs font-semibold" role="tablist" aria-label="表示モード">
+          <button id="tab-summary" type="button" class="px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-100 shadow-sm">
+            記事要約
+          </button>
+          <button id="tab-quiz" type="button" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200">
+            復習テスト
+          </button>
+          <button id="tab-cards" type="button" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200">
+            フレーズカード
+          </button>
+        </div>
+      </div>
+
+      <h1 class="text-xl sm:text-2xl font-bold text-zinc-50 tracking-tight">
+        英語記事 学習ノート＆復習テスト
+      </h1>
+      <p class="text-xs sm:text-sm text-zinc-400 mt-1">
+        要約・重要フレーズ・別視点のディスカッション英語を音声読み上げとテストで定着
+      </p>
+
+      <!-- Article Selector & Controls Bar -->
+      <div class="mt-4 p-3.5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <label for="article-select" class="text-xs font-semibold text-zinc-400 shrink-0">記事：</label>
+            <select id="article-select" class="w-full min-w-0 text-xs sm:text-sm font-medium text-zinc-100 bg-zinc-950 border border-zinc-700 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </select>
+          </div>
+          <button id="open-data-modal-btn" type="button" class="shrink-0 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition">
+            記事管理
+          </button>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t border-zinc-800/80">
+          <div class="flex flex-wrap items-center gap-1.5" id="accent-selector">
+            <span class="text-xs font-semibold text-zinc-400 mr-0.5">発音：</span>
+            <button type="button" data-accent="en-US" class="accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white transition">🇺🇸 US</button>
+            <button type="button" data-accent="en-GB" class="accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 transition">🇬🇧 UK</button>
+            <button type="button" data-accent="en-AU" class="accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 transition">🇦🇺 AU</button>
+            <button type="button" data-accent="en-CA" class="accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 transition">🇨🇦 CA</button>
+            <button type="button" data-accent="en-IN" class="accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 transition">🇮🇳 IN</button>
+          </div>
+          <div class="inline-flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5 text-xs shrink-0">
+            <span class="px-2 text-zinc-400 font-medium">速度</span>
+            <button type="button" data-rate="1.0" class="rate-btn px-2 py-1 rounded-md bg-zinc-800 text-emerald-300 font-semibold">1.0x</button>
+            <button type="button" data-rate="1.2" class="rate-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold">1.2x</button>
+            <button type="button" data-rate="1.4" class="rate-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold">1.4x</button>
+            <button type="button" data-rate="1.6" class="rate-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold">1.6x</button>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-zinc-800/80">
+          <div class="flex flex-wrap items-center gap-2 min-w-0 flex-1">
+            <div class="inline-flex items-center gap-0.5 bg-zinc-950 border border-zinc-800 rounded-lg p-0.5 text-xs shrink-0">
+              <button type="button" data-gender="all" class="gender-btn px-2 py-1 rounded-md bg-zinc-800 text-emerald-300 font-semibold">すべて</button>
+              <button type="button" data-gender="female" class="gender-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold">女性</button>
+              <button type="button" data-gender="male" class="gender-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold">男性</button>
+            </div>
+            <div class="flex items-center gap-1.5 min-w-0 flex-1">
+              <label for="voice-select" class="text-xs font-semibold text-zinc-400 shrink-0">話者：</label>
+              <select id="voice-select" class="w-full sm:max-w-[230px] min-w-0 text-xs font-medium text-zinc-100 bg-zinc-950 border border-zinc-700 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="">自動（高音質ネイティブ優先）</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 shrink-0">
+            <button id="toggle-shadow-btn" type="button" class="px-2.5 py-1.5 rounded-lg border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition">
+              🔁 シャドーイング反復: OFF
+            </button>
+            <button id="open-voice-modal-btn" type="button" class="px-2.5 py-1.5 rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 text-xs font-semibold transition">
+              🎙 ネイティブ音声設定
+            </button>
+            <button id="global-stop-btn" type="button" class="hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-rose-500/40 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 text-xs font-semibold transition">
+              <span>⏹</span>
+              <span id="playing-status-label">停止</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- SUMMARY VIEW -->
+    <main id="summary-view" class="space-y-6">
+      <section class="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 sm:p-6">
+        <div class="flex flex-wrap items-center gap-2 mb-2" id="meta-tags"></div>
+        <h2 id="art-title" class="text-lg sm:text-xl font-bold text-zinc-50 leading-snug"></h2>
+        <p id="art-meta" class="text-xs sm:text-sm text-zinc-400 mt-1.5"></p>
+
+        <div class="mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/25">
+          <div class="text-xs font-semibold text-emerald-300 mb-1">一言まとめ</div>
+          <p id="art-oneliner" class="text-sm text-zinc-100 leading-relaxed"></p>
+        </div>
+
+        <div class="mt-5">
+          <h3 class="text-sm font-bold text-zinc-200 mb-3">1. 内容の要約・記憶のフック</h3>
+          <ul id="art-summary-list" class="space-y-2.5 text-sm text-zinc-300 leading-relaxed"></ul>
+        </div>
+
+        <div id="art-quote-wrap" class="hidden mt-5 p-4 rounded-xl bg-zinc-950 border-l-4 border-emerald-500">
+          <div class="flex items-start justify-between gap-3">
+            <blockquote id="art-quote-text" class="text-sm text-zinc-200 italic leading-relaxed"></blockquote>
+            <button id="speak-quote-btn" type="button" class="speak-btn shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-emerald-300 text-xs font-semibold">
+              <span aria-hidden="true">🔊</span>
+              <span>再生</span>
+            </button>
+          </div>
+          <div id="art-quote-author" class="text-xs text-zinc-400 mt-2"></div>
+        </div>
+      </section>
+
+      <section class="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm sm:text-base font-bold text-zinc-100">2. 覚えておきたい英語フレーズ</h3>
+            <span id="phrase-count-badge" class="text-xs font-medium text-zinc-400"></span>
+          </div>
+          <button id="play-all-phrases-btn" type="button" class="speak-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+            <span aria-hidden="true">▶</span><span>全例文を連続再生</span>
+          </button>
+        </div>
+        <div id="phrases-list" class="space-y-3"></div>
+        <div id="art-memory-tip-wrap" class="hidden mt-4 p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+          <span class="font-semibold text-emerald-300">記憶のコツ：</span>
+          <span id="art-memory-tip"></span>
+        </div>
+      </section>
+
+      <section class="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 class="text-sm sm:text-base font-bold text-zinc-100">3. 議論を広げる別の視点 &amp; 英訳ディスカッション表現</h3>
+          <div class="flex items-center gap-2">
+            <button id="play-all-persp-btn" type="button" class="speak-btn inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+              <span aria-hidden="true">▶</span><span>全スピーチを連続再生</span>
+            </button>
+            <button id="toggle-jp-btn" type="button" class="px-2.5 py-1 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-zinc-300 transition">
+              日本語を隠す
+            </button>
+          </div>
+        </div>
+        <div id="perspectives-list" class="space-y-3.5"></div>
+      </section>
+    </main>
+
+    <!-- QUIZ VIEW -->
+    <section id="quiz-view" class="hidden">
+      <!-- Scope & Category Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-5">
+        <div class="flex flex-wrap gap-2" id="category-filters">
+          <button type="button" data-cat="all" id="cat-all-btn" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white">
+            すべて (8問)
+          </button>
+          <button type="button" data-cat="phrases" id="cat-phrases-btn" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800">
+            重要フレーズ (5問)
+          </button>
+          <button type="button" data-cat="discussion" id="cat-discussion-btn" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800">
+            別視点の英訳 (3問)
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="shuffle-quiz-btn" type="button" class="px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition">
+            🔀 ランダム出題: OFF
+          </button>
+          <button id="toggle-all-articles-quiz-btn" type="button" class="px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition">
+            全記事を横断出題: OFF
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div id="progress-container" class="mb-5">
+        <div class="flex items-center justify-between text-xs font-medium text-zinc-400 mb-1.5">
+          <span id="progress-label">問題 1 / 8</span>
+          <span id="score-label">正解数: 0</span>
+        </div>
+        <div class="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 12%;"></div>
+        </div>
+      </div>
+
+      <!-- Question Card -->
+      <div id="question-card" class="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 sm:p-7">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span id="q-badge" class="inline-block px-2.5 py-0.5 rounded-md text-xs font-semibold bg-zinc-800 text-emerald-300 border border-zinc-700">
+              重要フレーズ
+            </span>
+            <span id="q-article-tag" class="text-xs text-zinc-500 font-medium"></span>
+          </div>
+          <span id="q-number" class="text-xs font-semibold text-zinc-500">Q1</span>
+        </div>
+
+        <h2 id="q-prompt" class="text-base sm:text-lg font-semibold text-zinc-50 leading-relaxed mb-3"></h2>
+
+        <div id="q-context-wrap" class="hidden mb-5">
+          <div class="bg-zinc-950 border-l-4 border-emerald-500 px-3.5 py-3 rounded-r-lg">
+            <p id="q-context" class="text-sm sm:text-base text-zinc-200 italic leading-relaxed"></p>
+            <div class="mt-2.5 flex items-center gap-2">
+              <button id="speak-question-btn" type="button" class="speak-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                <span aria-hidden="true">🔊</span>
+                <span id="speak-question-label">英文を読み上げる（空欄あり）</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="options-list" class="space-y-2.5 mt-4"></div>
+
+        <!-- Feedback Area -->
+        <div id="feedback-box" class="hidden mt-5 p-4 rounded-xl border text-sm leading-relaxed">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <div id="feedback-title" class="font-bold"></div>
+            <button id="speak-complete-btn" type="button" class="speak-btn inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-semibold">
+              <span aria-hidden="true">🔊</span>
+              <span>完成文を読み上げる</span>
+            </button>
+          </div>
+          <div id="feedback-translation" class="hidden mb-2 px-3 py-2 rounded-lg bg-zinc-950/90 border border-zinc-800 text-zinc-200 text-xs sm:text-sm"></div>
+          <p id="feedback-text" class="text-zinc-300"></p>
+        </div>
+
+        <!-- Action Footer -->
+        <div class="mt-6 flex items-center justify-between gap-3">
+          <button id="restart-inline-btn" type="button" class="text-xs font-medium text-zinc-400 hover:text-zinc-200 underline underline-offset-2">
+            最初からやり直す
+          </button>
+          <button id="next-btn" type="button" class="hidden px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition">
+            次の問題へ →
+          </button>
+        </div>
+      </div>
+
+      <!-- Result Card -->
+      <div id="result-card" class="hidden bg-zinc-900 rounded-2xl border border-zinc-800 p-6 sm:p-8">
+        <div class="text-center mb-6">
+          <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 mb-3">
+            テスト完了
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-zinc-50" id="result-score-text">0 / 8</h2>
+          <p class="text-sm text-zinc-400 mt-1" id="result-message"></p>
+        </div>
+
+        <div id="category-breakdown" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6"></div>
+
+        <div class="flex flex-wrap justify-center gap-3 mb-7">
+          <button id="retry-wrong-btn" type="button" class="hidden px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-sm font-semibold shadow-sm transition">
+            間違えた問題だけやり直す
+          </button>
+          <button id="retry-all-btn" type="button" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-sm transition">
+            もう一度全問チャレンジ
+          </button>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-bold text-zinc-200 mb-3">回答の振り返り</h3>
+          <div id="review-list" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FLASHCARDS VIEW -->
+    <section id="cards-view" class="hidden space-y-4">
+      <!-- Mastery Progress & Filter Bar -->
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div class="flex flex-wrap items-center gap-1.5" id="card-filter-group">
+            <button type="button" data-filter="all" id="cf-all-btn" class="cf-btn px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white">すべて</button>
+            <button type="button" data-filter="unmastered" id="cf-unmastered-btn" class="cf-btn px-3 py-1 rounded-full text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800">未習得・要復習</button>
+            <button type="button" data-filter="mastered" id="cf-mastered-btn" class="cf-btn px-3 py-1 rounded-full text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800">習得済み</button>
+          </div>
+          <div class="flex items-center gap-3 text-xs">
+            <span id="card-mastery-label" class="font-semibold text-emerald-300">習得 0 / 8</span>
+            <button id="reset-card-progress-btn" type="button" class="text-zinc-400 hover:text-zinc-200 underline underline-offset-2">記録リセット</button>
+          </div>
+        </div>
+        <div class="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+          <div id="card-mastery-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+        </div>
+      </div>
+
+      <div class="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 sm:p-7">
+        <div class="flex items-center justify-between text-xs font-medium text-zinc-400 mb-4">
+          <span id="card-status-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800 text-zinc-300">未チェック</span>
+          <span id="card-counter">1 / 8</span>
+        </div>
+
+        <div id="flashcard-area" role="button" tabindex="0" class="w-full min-h-[240px] rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-zinc-950 to-zinc-900 p-6 sm:p-8 flex flex-col justify-center items-center text-center hover:border-emerald-400/60 transition cursor-pointer select-none">
+          <span id="card-article-label" class="text-[11px] font-medium text-zinc-500 mb-1"></span>
+          <span id="card-side-label" class="text-[11px] font-semibold uppercase tracking-wider text-emerald-400 mb-3">
+            English Phrase
+          </span>
+          <div id="card-main-text" class="text-xl sm:text-2xl font-bold text-zinc-50 mb-2"></div>
+          <p id="card-sub-text" class="text-sm text-zinc-200 leading-relaxed max-w-xl mb-2"></p>
+          <p id="card-example-ja" class="hidden text-xs sm:text-sm text-zinc-400 leading-relaxed max-w-xl mb-3"></p>
+          <div id="card-details-wrap" class="hidden w-full max-w-xl text-left bg-zinc-950/80 border border-zinc-800 rounded-xl p-3.5 mb-4 space-y-2 text-xs">
+            <div id="card-endef-row" class="hidden">
+              <span class="font-semibold text-emerald-300">英英定義：</span>
+              <span id="card-endef-text" class="text-zinc-300"></span>
+            </div>
+            <div id="card-syn-row" class="hidden flex flex-wrap items-center gap-1.5">
+              <span class="font-semibold text-emerald-300">類義語：</span>
+              <div id="card-syn-list" class="inline-flex flex-wrap gap-1.5"></div>
+            </div>
+          </div>
+          <button id="speak-card-btn" type="button" class="speak-btn inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-emerald-300 text-xs font-semibold">
+            <span aria-hidden="true">🔊</span>
+            <span id="speak-card-label">フレーズを読み上げる</span>
+          </button>
+        </div>
+
+        <!-- Self-Assessment Buttons -->
+        <div id="card-rating-row" class="mt-4 grid grid-cols-2 gap-3">
+          <button id="mark-review-btn" type="button" class="speak-btn py-2.5 px-4 rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-sm font-semibold transition">
+            🔁 まだ曖昧
+          </button>
+          <button id="mark-known-btn" type="button" class="speak-btn py-2.5 px-4 rounded-xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-sm font-semibold transition">
+            ✅ 覚えていた
+          </button>
+        </div>
+
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <button id="prev-card-btn" type="button" class="px-4 py-2 rounded-xl border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-sm font-semibold text-zinc-200 transition">
+            ← 前へ
+          </button>
+          <button id="flip-card-btn" type="button" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 text-sm font-semibold transition">
+            答えをめくる
+          </button>
+          <button id="next-card-btn" type="button" class="px-4 py-2 rounded-xl border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-sm font-semibold text-zinc-200 transition">
+            次へ →
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- NaturalReader-Style Sticky Bottom Audio Player -->
+  <div id="nr-player-bar" class="hidden fixed bottom-0 inset-x-0 z-30 bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 shadow-2xl">
+    <div class="max-w-3xl mx-auto px-4 pt-3 pb-safe sm:px-6">
+      <!-- Live Word-by-Word Highlight Caption -->
+      <div class="mb-2.5 flex items-start justify-between gap-3">
+        <div id="nr-caption" class="text-xs sm:text-sm text-zinc-200 leading-relaxed flex-1 max-h-16 overflow-y-auto"></div>
+        <span id="nr-track-counter" class="text-[11px] font-semibold text-zinc-400 shrink-0 mt-0.5">1 / 1</span>
+      </div>
+
+      <!-- Controls Row -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5">
+          <button id="nr-prev-btn" type="button" title="前の文" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold flex items-center justify-center transition">⏮</button>
+          <button id="nr-playpause-btn" type="button" title="再生 / 一時停止" class="w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold flex items-center justify-center shadow-sm transition">⏸</button>
+          <button id="nr-next-btn" type="button" title="次の文" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-bold flex items-center justify-center transition">⏭</button>
+          <button id="nr-stop-btn" type="button" title="停止" class="w-8 h-8 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-rose-300 text-xs font-bold flex items-center justify-center transition">⏹</button>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-1 justify-end min-w-[180px]">
+          <span id="nr-voice-badge" class="hidden sm:inline-block text-[11px] text-zinc-400 truncate max-w-[160px]"></span>
+          <div class="flex items-center gap-1.5">
+            <label for="nr-speed-slider" class="text-[11px] font-semibold text-zinc-400">速度</label>
+            <input id="nr-speed-slider" type="range" min="0.8" max="2.0" step="0.1" value="1.0" class="w-24 sm:w-28 accent-emerald-500 cursor-pointer" />
+            <span id="nr-speed-val" class="text-xs font-bold text-emerald-300 w-9 text-right">1.0x</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Article Data Management Modal -->
+  <div id="data-modal" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl max-w-lg w-full p-5 sm:p-6">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-bold text-zinc-100">登録済みの記事・データ管理</h2>
+        <button id="close-data-modal-btn" type="button" class="text-zinc-400 hover:text-zinc-100 text-lg font-bold px-2">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400 leading-relaxed mb-3">
+        現在登録されている記事一覧です。別のチャットで作成した記事データ（JSON）を貼り付けて追加したり、今のデータをコピーしてバックアップしたりできます。
+      </p>
+
+      <div id="registered-articles-list" class="space-y-2 mb-4 max-h-44 overflow-y-auto"></div>
+
+      <label for="import-json-input" class="block text-xs font-semibold text-zinc-300 mb-1">記事データ（JSON）を追加</label>
+      <textarea id="import-json-input" rows="4" placeholder='{"id":"...", "title":"...", "summaryPoints":[...], "phrases":[...], "perspectives":[...], "questions":[...]}' class="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-2.5 text-xs font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 mb-3"></textarea>
+
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <button id="copy-json-btn" type="button" class="px-3 py-2 rounded-lg border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition">
+          全データをJSONコピー
+        </button>
+        <button id="import-json-btn" type="button" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+          JSONから記事を追加
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Native Voice Settings Modal -->
+  <div id="voice-modal" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-zinc-900 rounded-2xl border border-zinc-800 shadow-2xl max-w-lg w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-bold text-zinc-100">🎙 ネイティブ音声設定</h2>
+        <button id="close-voice-modal-btn" type="button" class="text-zinc-400 hover:text-zinc-100 text-lg font-bold px-2">✕</button>
+      </div>
+
+      <!-- Engine Selector -->
+      <div class="mb-4">
+        <div class="text-xs font-semibold text-zinc-300 mb-2">音声エンジンを選択</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="engine-browser-btn" type="button" class="p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-left transition">
+            <div class="text-xs font-bold text-emerald-300">ブラウザ音声（無料）</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">端末・ブラウザの英語ボイスを使用</div>
+          </button>
+          <button id="engine-openai-btn" type="button" class="p-3 rounded-xl border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-left transition">
+            <div class="text-xs font-bold text-sky-300">OpenAI AI音声（超高音質）</div>
+            <div class="text-[11px] text-zinc-400 mt-0.5">スタジオ品質の自然なネイティブ発音</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- OpenAI Config Panel -->
+      <div id="openai-config-panel" class="hidden p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3 mb-4">
+        <div>
+          <label for="openai-key-input" class="block text-xs font-semibold text-zinc-300 mb-1">OpenAI APIキー（ブラウザ内のみ保存）</label>
+          <input id="openai-key-input" type="password" placeholder="sk-..." class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label for="openai-voice-select" class="block text-xs font-semibold text-zinc-300 mb-1">話者（ネイティブ）</label>
+            <select id="openai-voice-select" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-2 text-xs text-zinc-100">
+              <option value="coral">Coral（明瞭・自然）</option>
+              <option value="nova">Nova（自然・温かい女性）</option>
+              <option value="sage">Sage（落ち着いた知的ボイス）</option>
+              <option value="onyx">Onyx（深みのある男性）</option>
+              <option value="alloy">Alloy（ニュートラル）</option>
+            </select>
+          </div>
+          <div>
+            <label for="openai-model-select" class="block text-xs font-semibold text-zinc-300 mb-1">モデル</label>
+            <select id="openai-model-select" class="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-2 text-xs text-zinc-100">
+              <option value="gpt-4o-mini-tts">gpt-4o-mini-tts（抑揚指定可）</option>
+              <option value="tts-1-hd">tts-1-hd（高音質）</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <button id="test-openai-voice-btn" type="button" class="px-3 py-1.5 rounded-lg border border-sky-500/40 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 text-xs font-semibold transition">
+            ▶ サンプルを聴く
+          </button>
+          <button id="save-voice-settings-btn" type="button" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition">
+            設定を保存
+          </button>
+        </div>
+      </div>
+
+      <!-- iPhone High-Quality Voice Guide -->
+      <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-xs text-zinc-300 leading-relaxed">
+        <div class="font-bold text-emerald-300">📱 iPhone でネイティブ音声にする手順（無料）</div>
+        <p>1. iPhoneの「設定」→「アクセシビリティ」→「読み上げコンテンツ」→「声」→「英語」を開く</p>
+        <p>2. <strong>（プレミアム）</strong>または<strong>（拡張）</strong>をダウンロード：<br/>
+        ・US：<strong>Ava（プレミアム）</strong>・<strong>Zoe（プレミアム）</strong>・<strong>Evan（拡張）</strong><br/>
+        ・UK：<strong>Serena（プレミアム）</strong>・<strong>Daniel（拡張）</strong> / AU：<strong>Karen（プレミアム）</strong></p>
+        <p>3. Safariを一度スワイプ終了して開き直すと、このアプリが自動で最優先選択します。</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_ARTICLES = [
+      {
+        id: 'half-earth-whole-earth',
+        title: 'Half-Earth or Whole-Earth? Green or transformative recovery? Where are the voices from the Global South?',
+        shortTitle: 'Half-Earth or Whole-Earth?',
+        meta: 'Ashish Kothari（Kalpavriksh Environment Impact Group, India） / Oryx, 2021, 55(2), 161–162',
+        tags: ['生物多様性保全', 'グローバル・サウス', '先住民の権利', '脱成長'],
+        addedAt: '2026-11-25',
+        oneLiner: 'E.O. ウィルソンの「Half-Earth（地球の半分を自然保護区にする）」などの先進国発の環境保全策は、人間と自然を切り離す二元論に基づいており、実際に豊かな自然を守ってきたグローバル・サウスや先住民の声を置き去りにしている。',
+        summaryPoints: [
+          {
+            label: '「Half-Earth」や「自然に基づく解決策（NbS）」への批判',
+            text: '人権侵害のリスクをはらみ、企業や政府が破壊を続けながら他者に相殺させる「グリーンウォッシュ」に悪用されやすい。'
+          },
+          {
+            label: 'グローバル・サウスの声の欠如',
+            text: '推進派も批判派（北の脱成長論者を含む）も大半が欧米などグローバル・ノースに属しており、生物多様性の中心に暮らす先住民や地域コミュニティの主体的なガバナンスが無視されている。'
+          },
+          {
+            label: '「人間 vs 自然」の二元論（duality）の限界',
+            text: '自然を人間と切り離して考えるから「半分を自然に、半分を人間に」という発想になる。先住民の感覚は "humans and nature" ではなく "humans and the rest of nature"（人間と、その他の自然）である。'
+          },
+          {
+            label: '「Whole-Earth」と「レインボー・リカバリー」の提唱',
+            text: 'グリーン・ニューディールでも不平等や持続不可能性の構造には切り込めておらず、地球全体（Whole-Earth）での変革がなければ No-Earth になる。脱成長・直接民主主義・連帯経済・脱植民地化を統合した変革が必要。'
+          }
+        ],
+        quote: {
+          text: 'This is my message to the western world—your civilization is killing life on Earth.',
+          author: 'Nemonte Nenquimo（アマゾン・ワオラニ族のリーダー）'
+        },
+        memoryTip: 'Half-Earth → Whole-Earth → No-Earth の3語対比と、head and shoulders above ~, but do not go far enough（〜よりずっと良いが、まだ不十分だ）の譲歩＋批判セットで覚える。',
+        phrases: [
+          {
+            phrase: 'be fraught with ~',
+            speakPhrase: 'be fraught with',
+            meaning: '〜（危険・問題・リスク）をはらんでいる',
+            enDef: 'Filled with or likely to result in something undesirable, such as danger, difficulty, or tension.',
+            synonyms: ['full of', 'laden with', 'riddled with'],
+            example: 'The idea is fraught with implications for human rights.',
+            exampleJa: 'その構想は人権への深刻な影響をはらんでいる。'
+          },
+          {
+            phrase: 'lend itself to ~',
+            speakPhrase: 'lend itself to',
+            meaning: '〜につながりやすい、悪用・利用されやすい',
+            enDef: 'To be naturally suited for, or easily adapted or exploited for, a particular use or outcome.',
+            synonyms: ['be conducive to', 'open itself up to', 'be prone to'],
+            example: 'This approach lends itself to another kind of greenwash.',
+            exampleJa: 'このアプローチは別種のグリーンウォッシュに悪用されやすい。'
+          },
+          {
+            phrase: 'be lost on [人]',
+            speakPhrase: 'be lost on someone',
+            meaning: '〜には理解されない、響かない',
+            enDef: 'To fail to be noticed, understood, or appreciated by someone.',
+            synonyms: ['go over someone’s head', 'escape someone', 'fail to resonate with'],
+            example: 'The non-duality is lost on those of us who think in terms of humans and nature.',
+            exampleJa: 'その非二元論は、人間と自然を切り離して考える私たちには理解されにくい。'
+          },
+          {
+            phrase: 'fathom',
+            speakPhrase: 'fathom',
+            meaning: '〜を深く理解する、推し量る（否定文が定番）',
+            enDef: 'To understand a complex, unfamiliar, or deep problem or way of life after much thought.',
+            synonyms: ['comprehend', 'grasp', 'wrap one’s head around'],
+            example: 'Even those of us living in cities are unable to adequately fathom such a life.',
+            exampleJa: '都市に暮らす私たちでさえ、そうした生き方を十分に推し量ることはできない。'
+          },
+          {
+            phrase: 'take ~ to its logical conclusion',
+            speakPhrase: 'take something to its logical conclusion',
+            meaning: '〜を論理的な帰結まで突き詰める',
+            enDef: 'To follow an idea, argument, or trend all the way to its inevitable final result.',
+            synonyms: ['follow through to the end', 'carry to its ultimate consequence'],
+            example: 'This means taking Nenquimo’s message to its logical conclusion.',
+            exampleJa: 'これはネンキモ氏のメッセージを論理的な帰結まで突き詰めて考えることを意味する。'
+          },
+          {
+            phrase: 'head and shoulders above ~',
+            speakPhrase: 'head and shoulders above',
+            meaning: '〜より頭一つ抜けている、はるかに優れている',
+            enDef: 'Far superior to others of the same kind.',
+            synonyms: ['far superior to', 'miles ahead of', 'a cut above'],
+            example: 'Green New Deals are head and shoulders above conventional development paradigms.',
+            exampleJa: 'グリーン・ニューディールは従来の開発モデルよりはるかに優れている。'
+          },
+          {
+            phrase: 'not go far enough in ~ing',
+            speakPhrase: 'not go far enough in',
+            meaning: '〜する点ではまだ不十分だ',
+            enDef: 'To make some progress, yet fail to be thorough or ambitious enough to solve the root issue.',
+            synonyms: ['fall short of', 'be insufficient in', 'stop short of'],
+            example: 'They do not go far enough in challenging political and economic structures.',
+            exampleJa: 'それらは政治・経済構造に挑むという点ではまだ不十分だ。'
+          },
+          {
+            phrase: 'shed ~',
+            speakPhrase: 'shed',
+            meaning: '（古い習慣・名残などを）脱ぎ捨てる、手放す',
+            enDef: 'To get rid of something unwanted, outdated, or burdensome.',
+            synonyms: ['cast off', 'discard', 'shake off', 'let go of'],
+            example: 'We need the Global North to shed its remnant colonialism.',
+            exampleJa: 'グローバル・ノースは残存する植民地主義を脱ぎ捨てる必要がある。'
+          }
+        ],
+        perspectives: [
+          {
+            title: '緊急性と現実主義の視点',
+            ja: '文明全体の作り直し（脱成長）を待っていては種の絶滅や気候危機の臨界点に間に合わない。不完全でも「30x30」や「Half-Earth」のような明確な数値目標で今すぐ保護区を広げる方が現実的ではないか。',
+            en: "If we wait for a complete overhaul of our civilization or a shift to post-growth, we might miss critical tipping points for species extinction and climate change. Even if they're imperfect, isn't it more realistic to expand protected areas right now using clear numerical targets like '30x30' or 'Half-Earth'?"
+          },
+          {
+            title: 'グローバル・サウス内部の多様性',
+            ja: '途上国の人々が全員「脱成長」を望んでいるわけではない。貧困削減・医療・インフラ整備のために一定の経済成長は依然として不可欠であり、脱成長はすでに豊かな側の理想論になりかねない。',
+            en: "Not everyone in developing countries wants 'degrowth.' A certain level of economic growth is still essential for poverty reduction, healthcare, and infrastructure—so degrowth can easily sound like an idealistic luxury of those who are already wealthy."
+          },
+          {
+            title: '市場メカニズムとルール強化の視点',
+            ja: '自然に基づく解決策（NbS）や企業資金の活用を全否定するのではなく、先住民の土地所有権や透明性を法的に担保したうえで、民間の資金力を保全に活かす道を探るべきではないか。',
+            en: "Rather than rejecting nature-based solutions or corporate funding outright, shouldn't we look for ways to channel private capital into conservation while legally guaranteeing Indigenous land rights and strict transparency?"
+          }
+        ],
+        questions: [
+          {
+            id: 'he-1',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な表現を選んでください。（意味：人権への深刻な影響をはらんでいる）',
+            context: 'Critics have argued the idea is ( ______ ) implications for human rights.',
+            completedSentence: 'Critics have argued the idea is fraught with implications for human rights.',
+            options: ['fraught with', 'lost on', 'head and shoulders above', 'shed of'],
+            answer: 0,
+            explanation: 'be fraught with ~ は「〜（危険・問題・緊張など）をはらんでいる、満ちている」という定番表現です。'
+          },
+          {
+            id: 'he-2',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な表現を選んでください。（意味：別種のグリーンウォッシュに悪用されやすい）',
+            context: 'But this approach too ignores the power and rights dimensions, and ( ______ ) another kind of greenwash.',
+            completedSentence: 'But this approach too ignores the power and rights dimensions, and lends itself to another kind of greenwash.',
+            options: ['fathoms', 'lends itself to', 'goes far enough in', 'sheds'],
+            answer: 1,
+            explanation: 'lend itself to ~ は「（構造的に）〜につながりやすい、〜に利用・悪用されやすい」という意味で、議論でとても便利です。'
+          },
+          {
+            id: 'he-3',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な表現を選んでください。（意味：その非二元論は私たちには理解されない・響かない）',
+            context: 'The non-duality such communities thrive on is ( ______ ) those of us who think in terms of humans and nature.',
+            completedSentence: 'The non-duality such communities thrive on is lost on those of us who think in terms of humans and nature.',
+            options: ['fraught with', 'taken to', 'lost on', 'above'],
+            answer: 2,
+            explanation: 'be lost on [人] は「（深い意味や皮肉、良識などが）[人]には理解されない・通じない」というこなれた表現です。'
+          },
+          {
+            id: 'he-4',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な動詞を選んでください。（意味：そうした暮らしを十分には理解・想像できない）',
+            context: 'Even those of us in the south living in cities are unable to adequately ( ______ ) such a life.',
+            completedSentence: 'Even those of us in the south living in cities are unable to adequately fathom such a life.',
+            options: ['shed', 'fathom', 'offset', 'engulf'],
+            answer: 1,
+            explanation: 'fathom は「（底知れないこと・複雑なことを）深く理解する、推し量る」。can’t fathom / unable to fathom のように否定文で非常によく使われます。'
+          },
+          {
+            id: 'he-5',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な動詞を選んでください。（意味：残存する植民地主義を脱ぎ捨てる・手放す）',
+            context: 'To succeed we need the Global North to ( ______ ) its remnant colonialism.',
+            completedSentence: 'To succeed we need the Global North to shed its remnant colonialism.',
+            options: ['fathom', 'lend', 'shed', 'strive'],
+            answer: 2,
+            explanation: 'shed は「（古い習慣・偏見・名残などを）脱ぎ捨てる、振り払う」という意味の洗練された動詞です。'
+          },
+          {
+            id: 'he-6',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【緊急性と現実主義の視点】空欄に入る最も自然な英語表現を選んでください。',
+            context: 'If we wait for a complete overhaul of our civilization or a shift to post-growth, we might ( ______ ) for species extinction and climate change.',
+            completedSentence: 'If we wait for a complete overhaul of our civilization or a shift to post-growth, we might miss critical tipping points for species extinction and climate change.',
+            translation: '文明全体の作り直しや脱成長への移行を待っていては、種の絶滅や気候危機の決定的な臨界点に間に合わなくなるかもしれない。',
+            options: ['miss critical tipping points', 'shed remnant colonialism', 'be lost on the non-duality', 'take it to its logical conclusion'],
+            answer: 0,
+            explanation: 'tipping point（臨界点・転換点）は気候変動や生態系の議論で必須の語彙です。miss critical tipping points で「決定的な臨界点に間に合わなくなる／逃す」と表現できます。'
+          },
+          {
+            id: 'he-7',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【グローバル・サウス内部の多様性】空欄に入る最も自然な英語表現を選んでください。',
+            context: 'A certain level of economic growth is still essential for poverty reduction, healthcare, and infrastructure—so degrowth can easily sound like ( ______ ).',
+            completedSentence: 'A certain level of economic growth is still essential for poverty reduction, healthcare, and infrastructure—so degrowth can easily sound like an idealistic luxury of those who are already wealthy.',
+            translation: '貧困削減・医療・インフラ整備のためには一定の経済成長が依然として不可欠であり、脱成長はすでに豊かな人々の理想論的な贅沢のように聞こえかねない。',
+            options: ['a top-down conservation agency', 'an idealistic luxury of those who are already wealthy', 'another kind of greenwash for corporations', 'a supportive policy context for tenure'],
+            answer: 1,
+            explanation: 'an idealistic luxury of those who are already wealthy（すでに豊かな人々の理想論的な贅沢）と表現すると、途上国の貧困削減やインフラ需要の視点から説得力のある反論ができます。'
+          },
+          {
+            id: 'he-8',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【市場メカニズムとルール強化の視点】空欄に入る最も自然な英語表現の組み合わせを選んでください。',
+            context: 'Rather than ( A ) nature-based solutions or corporate funding ( A ), shouldn’t we look for ways to ( B ) private capital into conservation?',
+            completedSentence: 'Rather than rejecting nature-based solutions or corporate funding outright, shouldn’t we look for ways to channel private capital into conservation?',
+            translation: '自然に基づく解決策（NbS）や企業資金を全否定するのではなく、民間の資金力を保全に振り向ける道を探るべきではないだろうか。',
+            options: ['A: rejecting ... outright / B: channel', 'A: fathoming ... lightly / B: shed', 'A: lending ... completely / B: offset', 'A: engulfing ... entirely / B: divide'],
+            answer: 0,
+            explanation: 'reject ~ outright（〜を全面的に拒否・全否定する）と channel A into B（Aの資金・資源をBへ振り向ける・注ぎ込む）は、議論でバランスある対案を出すときの強力な表現です。'
+          }
+        ]
+      },
+      {
+        id: 'carnegie-stop-worrying',
+        title: 'How to Stop Worrying and Start Living',
+        shortTitle: 'How to Stop Worrying and Start Living',
+        meta: 'Dale Carnegie — 英語読書・分析ノート（Day-tight Compartments / 疲労前の休息 / 職業的倦怠の克服）',
+        tags: ['メンタル管理', '習慣', 'セルフマネジメント', '古典ノンフィクション'],
+        addedAt: '2026-11-25',
+        oneLiner: '過去の後悔や未来の不安を切り離して「今日1日という防水区画（Day-tight Compartments）」に集中し、疲れ切る前に意図的に休むことで、不安や燃え尽きを防ぐ実践的な指針を示している。',
+        summaryPoints: [
+          {
+            label: 'Day-tight Compartments（今日という区画で生きる）',
+            text: '船の防水区画のように過去と未来の扉を閉じ、目の前の「今日1日」にエネルギーを集中させることで、過剰な不安から心を守る。'
+          },
+          {
+            label: '疲労を感じる前の意図的な休息',
+            text: '限界まで働き続けてから休むのではなく、疲れる前に短い休息を挟むことで、慢性的な疲労や燃え尽き（burnout）を未然に防ぐ。'
+          },
+          {
+            label: '職業的な退屈（occupational boredom）への対処',
+            text: '疲労の多くは肉体的な消耗だけでなく、退屈・不安・フラストレーションといった心理的要因から生じるため、仕事への向き合い方や切り替えが重要になる。'
+          }
+        ],
+        quote: null,
+        memoryTip: 'day-tight compartments（今日1日の区画）と、dwell on（くよくよ考える）⇔ ward off（未然に防ぐ）の対比で覚えると会話で使いやすい。',
+        phrases: [
+          {
+            phrase: 'live in day-tight compartments',
+            speakPhrase: 'live in day-tight compartments',
+            meaning: '過去や未来を遮断し、今日という1日だけに集中して生きる',
+            enDef: 'To focus completely on today while shutting out regrets about the past and anxiety about the future.',
+            synonyms: ['take it one day at a time', 'stay present', 'focus on the here and now'],
+            example: 'To keep anxiety from overwhelming you, try to live in day-tight compartments instead of stressing over tomorrow.',
+            exampleJa: '不安に圧倒されないよう、明日のことで悩まず今日という1日に区切って生きるようにしてみよう。'
+          },
+          {
+            phrase: 'dwell on ~',
+            speakPhrase: 'dwell on',
+            meaning: '（過去の失敗や嫌なことを）くよくよ考え続ける、引きずる',
+            enDef: 'To keep thinking or talking about something unpleasant or unchangeable for too long.',
+            synonyms: ['brood over', 'obsess over', 'linger on', 'harp on'],
+            example: 'It does no good to dwell on past mistakes that you can no longer change.',
+            exampleJa: 'もう変えられない過去の失敗をくよくよ考え続けても意味がない。'
+          },
+          {
+            phrase: 'take a toll on ~',
+            speakPhrase: 'take a toll on',
+            meaning: '〜に深刻な負担・悪影響を及ぼす',
+            enDef: 'To have a serious, gradual negative impact or cause harm over time.',
+            synonyms: ['wear down', 'strain', 'have an adverse effect on'],
+            example: 'Constant worry and occupational boredom can take a toll on both your mental and physical health.',
+            exampleJa: '絶え間ない不安や仕事上の退屈は、心身両面の健康に深刻な負担を及ぼし得る。'
+          },
+          {
+            phrase: 'ward off ~',
+            speakPhrase: 'ward off',
+            meaning: '（疲労・病気・不安などを）未然に防ぐ、遠ざける',
+            enDef: 'To prevent someone or something unpleasant or harmful from affecting you.',
+            synonyms: ['fend off', 'keep at bay', 'stave off', 'avert'],
+            example: 'Taking short, intentional breaks before you feel tired helps ward off chronic fatigue.',
+            exampleJa: '疲れを感じる前に短く意図的な休憩をとることで、慢性的な疲労を未然に防げる。'
+          },
+          {
+            phrase: 'burn out',
+            speakPhrase: 'burn out',
+            meaning: '燃え尽きる、心身ともに消耗し切る',
+            enDef: 'To become physically or emotionally exhausted from prolonged stress or overwork.',
+            synonyms: ['wear oneself out', 'run out of steam', 'hit a wall'],
+            example: 'If you push yourself nonstop without resting before fatigue sets in, you are bound to burn out.',
+            exampleJa: '疲労が出る前に休まずノンストップで自分を追い込めば、いずれ燃え尽きてしまう。'
+          },
+          {
+            phrase: 'serve as an early warning',
+            speakPhrase: 'serve as an early warning',
+            meaning: '早期警告（危険を知らせるサイン）として機能する',
+            enDef: 'To act as an advance signal that alerts you to a potential risk or problem.',
+            synonyms: ['act as a red flag', 'function as a heads-up', 'signal trouble ahead'],
+            example: 'Moderate anxiety can actually serve as a useful early warning when facing high-stakes decisions.',
+            exampleJa: '適度な不安は、重要な意思決定に直面したときに有益な早期警告として機能することもある。'
+          }
+        ],
+        perspectives: [
+          {
+            title: '長期計画とのバランスの視点',
+            ja: '今日だけに集中すれば不安は和らぐが、長期的な先見性がなければ、何年もの準備を要するリスクやキャリア上の課題を見落としてしまうかもしれない。',
+            en: 'Focusing strictly on today can ease anxiety, yet without long-term foresight, we may miss risks or career challenges that require years of preparation.'
+          },
+          {
+            title: '構造的・環境的な要因の視点',
+            ja: '疲れる前に休むといった心構えの習慣は個人には役立つが、慢性的な人手不足や非現実的な納期といった職場の構造的な問題までは解決できない。',
+            en: 'Mindset habits like resting before fatigue help individually, but they cannot fix systemic workplace issues such as chronic understaffing or unrealistic deadlines.'
+          },
+          {
+            title: '不安のポジティブな側面の視点',
+            ja: '不安を完全に取り除こうとするよりも、適度な不安は重要な意思決定に直面したときの有益な早期警告として機能することもある。',
+            en: 'Rather than trying to eliminate worry completely, moderate anxiety can actually serve as a useful early warning when facing high-stakes decisions.'
+          }
+        ],
+        questions: [
+          {
+            id: 'dc-1',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な表現を選んでください。（意味：今日という1日だけを区切って生きる）',
+            context: 'To keep anxiety from overwhelming you, try to ( ______ ) instead of stressing over tomorrow.',
+            completedSentence: 'To keep anxiety from overwhelming you, try to live in day-tight compartments instead of stressing over tomorrow.',
+            options: ['live in day-tight compartments', 'take it to its logical conclusion', 'be lost on the future', 'shed your daily routine'],
+            answer: 0,
+            explanation: 'live in day-tight compartments は船の防水区画のように過去と未来を遮断し「今日1日に集中して生きる」という意味です。'
+          },
+          {
+            id: 'dc-2',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な句動詞を選んでください。（意味：過去の失敗をくよくよ考え続ける）',
+            context: 'It does no good to ( ______ ) past mistakes that you can no longer change.',
+            completedSentence: 'It does no good to dwell on past mistakes that you can no longer change.',
+            options: ['ward off', 'dwell on', 'burn out', 'channel into'],
+            answer: 1,
+            explanation: 'dwell on ~ は「（嫌なこと・過去の失敗などを）くよくよ考え続ける、引きずる」という頻出の句動詞です。'
+          },
+          {
+            id: 'dc-3',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な表現を選んでください。（意味：心身に深刻な負担・悪影響を及ぼす）',
+            context: 'Constant worry and occupational boredom can ( ______ ) both your mental and physical health.',
+            completedSentence: 'Constant worry and occupational boredom can take a toll on both your mental and physical health.',
+            options: ['take a toll on', 'go far enough in', 'lend itself to', 'be fraught with'],
+            answer: 0,
+            explanation: 'take a toll on ~ は「〜にじわじわと深刻な負担・ダメージを与える」という汎用性の高いイディオムです。'
+          },
+          {
+            id: 'dc-4',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な句動詞を選んでください。（意味：疲労を未然に防ぐ・遠ざける）',
+            context: 'Taking short, intentional breaks before you feel tired helps ( ______ ) chronic fatigue.',
+            completedSentence: 'Taking short, intentional breaks before you feel tired helps ward off chronic fatigue.',
+            options: ['dwell on', 'ward off', 'fathom', 'reject outright'],
+            answer: 1,
+            explanation: 'ward off ~ は「（病気・疲労・不安などを）未然に防ぐ、寄せ付けない」という意味です。'
+          },
+          {
+            id: 'dc-5',
+            category: 'phrases',
+            categoryLabel: '重要フレーズ',
+            prompt: '空欄に入る最も適切な句動詞を選んでください。（意味：燃え尽きる、心身ともに消耗し切る）',
+            context: 'If you push yourself nonstop without resting before fatigue sets in, you are bound to ( ______ ).',
+            completedSentence: 'If you push yourself nonstop without resting before fatigue sets in, you are bound to burn out.',
+            options: ['burn out', 'ward off', 'shed off', 'dwell in'],
+            answer: 0,
+            explanation: 'burn out は「燃え尽きる、過労やストレスで消耗し切る」。名詞形は burnout（燃え尽き症候群）です。'
+          },
+          {
+            id: 'dc-6',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【長期計画とのバランスの視点】空欄に入る最も自然な英語表現を選んでください。',
+            context: 'Focusing strictly on today can ease anxiety, yet without ( ______ ), we may miss risks that require years of preparation.',
+            completedSentence: 'Focusing strictly on today can ease anxiety, yet without long-term foresight, we may miss risks that require years of preparation.',
+            translation: '今日だけに集中すれば不安は和らぐが、長期的な先見性がなければ、何年もの準備を要するリスクを見落としてしまうかもしれない。',
+            options: ['long-term foresight', 'occupational boredom', 'day-tight compartments', 'intentional rest'],
+            answer: 0,
+            explanation: 'long-term foresight（長期的な先見性・見通し）は、「今に集中すること」のメリットを認めつつ長期計画の必要性を論じるときにぴったりの表現です。'
+          },
+          {
+            id: 'dc-7',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【構造的・環境的な要因の視点】空欄に入る最も自然な英語表現を選んでください。',
+            context: 'Mindset habits like resting before fatigue help individually, but they cannot ( ______ ) such as chronic understaffing or unrealistic deadlines.',
+            completedSentence: 'Mindset habits like resting before fatigue help individually, but they cannot fix systemic workplace issues such as chronic understaffing or unrealistic deadlines.',
+            translation: '疲れる前に休むといった心構えの習慣は個人には役立つが、慢性的な人手不足や非現実的な納期といった職場の構造的な問題までは解決できない。',
+            options: ['dwell on past mistakes', 'fix systemic workplace issues', 'ward off personal habits', 'take a toll on morale'],
+            answer: 1,
+            explanation: 'systemic workplace issues（職場の構造的な問題）を使うと、個人のメンタル管理論に対して環境・制度面からの視点を的確に提示できます。'
+          },
+          {
+            id: 'dc-8',
+            category: 'discussion',
+            categoryLabel: '別視点の英訳',
+            prompt: '【不安のポジティブな側面の視点】空欄に入る最も自然な英語表現を選んでください。',
+            context: 'Rather than trying to eliminate worry completely, moderate anxiety can actually ( ______ ) when facing high-stakes decisions.',
+            completedSentence: 'Rather than trying to eliminate worry completely, moderate anxiety can actually serve as a useful early warning when facing high-stakes decisions.',
+            translation: '不安を完全に取り除こうとするよりも、適度な不安は重要な意思決定に直面したときの有益な早期警告として機能することもある。',
+            options: ['burn out your motivation', 'serve as a useful early warning', 'live in day-tight compartments', 'be lost on the audience'],
+            answer: 1,
+            explanation: 'serve as ~（〜として機能する・役立つ）＋ early warning（早期警告）で、不安を有益なシグナルとして捉え直す視点を自然に表現できます。'
+          }
+        ]
+      },
+      {
+      "id": "pew-social-media-civic",
+      "title": "Social Media, Echo Chambers & the Voter Turnout Paradox",
+      "shortTitle": "Social Media & Echo Chambers",
+      "meta": "Pew Research Center 関連記事ノート（SNSの政治的影響・エコーチェンバー・投票率のパラドックス）",
+      "tags": [
+            "メディア論",
+            "SNS",
+            "政治参加",
+            "エコーチェンバー"
+      ],
+      "addedAt": "2026-11-25",
+      "oneLiner": "SNSは政治情報へのアクセスやオンライン上の議論を劇的に広げた一方で、同質的な意見だけが増幅されるエコーチェンバーを生み、オンラインでの活発な発信が必ずしも実際の投票行動（オフラインの政治参加）に直結しないというパラドックスを抱えている。",
+      "summaryPoints": [
+            {
+                  "label": "エコーチェンバーと分極化",
+                  "text": "アルゴリズムがユーザーの好む情報を優先表示することで、異なる意見に触れる機会が減り、政治的な分断（polarization）が深まりやすい。"
+            },
+            {
+                  "label": "投票率のパラドックス（Voter Turnout Paradox）",
+                  "text": "SNS上では政治的な発信や「いいね」が活発でも、それが実際の投票率向上に直結するとは限らず、オンライン参加とオフライン行動の乖離が指摘されている。"
+            },
+            {
+                  "label": "情報疲労と政治的シニシズム",
+                  "text": "タイムラインに流れる対立的な議論や誤情報に晒され続けることで、かえって政治への不信感や無力感を強めて離脱する層も増えている。"
+            }
+      ],
+      "quote": null,
+      "memoryTip": "echo chamber（共鳴室）と polarization（分極化）、さらにオンラインの気軽な参加を批判する slacktivism をセットで押さえると議論の幅が一気に広がる。",
+      "phrases": [
+            {
+                  "phrase": "echo chamber",
+                  "speakPhrase": "echo chamber",
+                  "meaning": "エコーチェンバー（同じ意見ばかりが反響し増幅される閉じた環境）",
+                  "enDef": "An environment where a person only encounters beliefs or opinions that coincide with their own, reinforcing existing views.",
+                  "synonyms": [
+                        "filter bubble",
+                        "closed information loop",
+                        "ideological silo"
+                  ],
+                  "example": "Social media algorithms can trap users in an echo chamber that reinforces partisan bias.",
+                  "exampleJa": "SNSのアルゴリズムは、党派的な偏見を強めるエコーチェンバーにユーザーを閉じ込めかねない。"
+            },
+            {
+                  "phrase": "translate into ~",
+                  "speakPhrase": "translate into",
+                  "meaning": "（結果・行動など）に結びつく、転換される",
+                  "enDef": "To be converted into or lead to a tangible result, outcome, or real-world action.",
+                  "synonyms": [
+                        "convert into",
+                        "result in",
+                        "carry over into"
+                  ],
+                  "example": "High online engagement does not always translate into higher voter turnout at the polls.",
+                  "exampleJa": "オンライン上での高い関与が、必ずしも投票所での高い投票率に結びつくとは限らない。"
+            },
+            {
+                  "phrase": "deepen polarization",
+                  "speakPhrase": "deepen polarization",
+                  "meaning": "（社会・政治的な）分断・二極化を深める",
+                  "enDef": "To widen the divide between opposing political or social groups, making compromise harder.",
+                  "synonyms": [
+                        "widen the divide",
+                        "entrench division",
+                        "fuel partisanship"
+                  ],
+                  "example": "Outrage-driven feeds tend to deepen polarization rather than foster constructive debate.",
+                  "exampleJa": "怒りを煽るフィードは、建設的な議論を育むどころか分断を深める傾向がある。"
+            },
+            {
+                  "phrase": "breed cynicism",
+                  "speakPhrase": "breed cynicism",
+                  "meaning": "冷笑主義・不信感を生む、助長する",
+                  "enDef": "To gradually generate distrust or skepticism toward institutions, motives, or political processes.",
+                  "synonyms": [
+                        "foster distrust",
+                        "fuel skepticism",
+                        "erode public trust"
+                  ],
+                  "example": "Constant exposure to misinformation can breed cynicism among young voters.",
+                  "exampleJa": "誤情報に絶えず晒されることで、若年層の有権者の間に政治不信が生まれ得る。"
+            },
+            {
+                  "phrase": "civic engagement",
+                  "speakPhrase": "civic engagement",
+                  "meaning": "市民参加、社会・政治への主体的な関与",
+                  "enDef": "Active participation by citizens in community life, public affairs, and democratic processes.",
+                  "synonyms": [
+                        "public participation",
+                        "political involvement",
+                        "community activism"
+                  ],
+                  "example": "Digital platforms have lowered the barrier to civic engagement, especially for first-time voters.",
+                  "exampleJa": "デジタルプラットフォームは、特に初めて投票する層にとって市民参加のハードルを下げた。"
+            },
+            {
+                  "phrase": "slacktivism",
+                  "speakPhrase": "slacktivism",
+                  "meaning": "スラクティビズム（クリックや拡散だけで満足する手軽な社会参加）",
+                  "enDef": "Low-effort online actions, such as liking or sharing posts, that create a sense of activism without real-world impact.",
+                  "synonyms": [
+                        "armchair activism",
+                        "performative activism",
+                        "clicktivism"
+                  ],
+                  "example": "Critics dismiss hashtag campaigns as mere slacktivism that rarely changes policy.",
+                  "exampleJa": "批判派はハッシュタグ運動を、政策をほとんど変えない単なるスラクティビズムだと一蹴する。"
+            }
+      ],
+      "perspectives": [
+            {
+                  "title": "草の根動員・入口としてのSNSの肯定視点",
+                  "ja": "SNS上の参加は軽視されがちだが、従来は政治に関心がなかった若年層や少数派が声を上げ、オフラインの行動へと踏み出すための重要な入口になっているのではないか。",
+                  "en": "Online participation is often dismissed as superficial, yet isn't it an important gateway that helps previously disengaged young people and marginalized groups find their voice and eventually take offline action?"
+            },
+            {
+                  "title": "エコーチェンバー誇張論の視点",
+                  "ja": "実は多くのユーザーはSNSを通じて、オフラインの交友関係よりも多様なニュースや異論に偶然触れており、分断の主因をアルゴリズムだけに求めるのは単純化しすぎかもしれない。",
+                  "en": "In reality, many users are incidentally exposed to a wider range of news and opposing views on social media than in their offline circles, so blaming algorithms alone for polarization may be an oversimplification."
+            },
+            {
+                  "title": "制度設計・メディアリテラシーの視点",
+                  "ja": "SNS自体を規制・批判するだけでなく、若者が投票しやすいオンライン登録や期日前投票の拡充、学校でのメディアリテラシー教育を組み合わせることが本質的な解決策になるはずだ。",
+                  "en": "Rather than merely criticizing or regulating social media, combining easier voter registration, expanded early voting, and media literacy education in schools would be a more substantive solution."
+            }
+      ],
+      "questions": [
+            {
+                  "id": "pew-1",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：高い投票率に結びつくとは限らない）",
+                  "context": "High online engagement does not always ( ______ ) higher voter turnout at the polls.",
+                  "completedSentence": "High online engagement does not always translate into higher voter turnout at the polls.",
+                  "options": [
+                        "translate into",
+                        "dwell on",
+                        "ward off",
+                        "shed"
+                  ],
+                  "answer": 0,
+                  "explanation": "translate into ~ は「（結果・行動など）に結びつく、転換される」。議論で「Aが必ずしもBの結果になるとは限らない」と言うときの定番表現です。"
+            },
+            {
+                  "id": "pew-2",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：若年層の間に政治不信・冷笑主義を生む）",
+                  "context": "Constant exposure to misinformation can ( ______ ) among young voters.",
+                  "completedSentence": "Constant exposure to misinformation can breed cynicism among young voters.",
+                  "options": [
+                        "breed cynicism",
+                        "burn out",
+                        "lend itself to",
+                        "fathom"
+                  ],
+                  "answer": 0,
+                  "explanation": "breed cynicism は「不信感・冷笑主義を生む／助長する」。breed は感情や社会現象を「生み出す・温床となる」という意味でよく使われます。"
+            },
+            {
+                  "id": "pew-3",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な語を選んでください。（意味：クリックや拡散だけで満足する手軽な社会参加）",
+                  "context": "Critics dismiss hashtag campaigns as mere ( ______ ) that rarely changes policy.",
+                  "completedSentence": "Critics dismiss hashtag campaigns as mere slacktivism that rarely changes policy.",
+                  "options": [
+                        "civic engagement",
+                        "slacktivism",
+                        "echo chamber",
+                        "polarization"
+                  ],
+                  "answer": 1,
+                  "explanation": "slacktivism（slacker + activism の造語）は、SNSでの拡散や「いいね」など労力の少ないオンライン参加を皮肉る語です。"
+            },
+            {
+                  "id": "pew-4",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【草の根動員・入口としてのSNSの肯定視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Online participation is often dismissed as superficial, yet isn't it ( ______ ) that helps previously disengaged young people find their voice?",
+                  "completedSentence": "Online participation is often dismissed as superficial, yet isn't it an important gateway that helps previously disengaged young people find their voice?",
+                  "translation": "オンラインでの参加は表面的なものと軽視されがちだが、これまで無関心だった若者が声を上げるための重要な入口になっているのではないか。",
+                  "options": [
+                        "an important gateway",
+                        "a systemic workplace issue",
+                        "an ideological silo",
+                        "a remnant colonialism"
+                  ],
+                  "answer": 0,
+                  "explanation": "gateway（入口・きっかけ）と disengaged（無関心な・関与していない）を組み合わせると、オンライン参加の意義を説得力をもって反論できます。"
+            },
+            {
+                  "id": "pew-5",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【エコーチェンバー誇張論の視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Many users are incidentally exposed to opposing views online, so blaming algorithms alone for polarization may be ( ______ ).",
+                  "completedSentence": "Many users are incidentally exposed to opposing views online, so blaming algorithms alone for polarization may be an oversimplification.",
+                  "translation": "多くのユーザーはオンラインで偶然にも反対意見に触れているため、分断の原因をアルゴリズムだけに求めるのは単純化しすぎかもしれない。",
+                  "options": [
+                        "an oversimplification",
+                        "a critical tipping point",
+                        "an idealistic luxury",
+                        "a useful early warning"
+                  ],
+                  "answer": 0,
+                  "explanation": "be an oversimplification（単純化しすぎである）は、単一の原因に還元する主張に対して冷静に異論を唱えるときの万能フレーズです。"
+            },
+            {
+                  "id": "pew-6",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【制度設計・メディアリテラシーの視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Rather than merely regulating social media, combining easier voter registration and media literacy education would be ( ______ ).",
+                  "completedSentence": "Rather than merely regulating social media, combining easier voter registration and media literacy education would be a more substantive solution.",
+                  "translation": "単にSNSを規制するだけでなく、投票登録の簡素化とメディアリテラシー教育を組み合わせる方が、より本質的な解決策になるはずだ。",
+                  "options": [
+                        "a more substantive solution",
+                        "another kind of greenwash",
+                        "a top-down conservation agency",
+                        "a day-tight compartment"
+                  ],
+                  "answer": 0,
+                  "explanation": "substantive solution（実質的・本質的な解決策）は、対症療法ではなく根本的な対策を提案するときに非常に洗練された表現です。"
+            }
+      ]
+},
+      {
+      "id": "japan-active-cyber-ai",
+      "title": "Japan’s Active Cyber Defense & Dual-Use AI Risks",
+      "shortTitle": "Active Cyber Defense & AI",
+      "meta": "サイバー安全保障・テクノロジー分析ノート（能動的サイバー防御法・国家AI投資・AIのデュアルユースリスク）",
+      "tags": [
+            "安全保障",
+            "サイバー防御",
+            "AIガバナンス",
+            "地政学"
+      ],
+      "addedAt": "2026-11-25",
+      "oneLiner": "重要インフラを狙う高度なサイバー攻撃やAI悪用（偽情報・デュアルユース）に対抗するため、日本は「能動的サイバー防御」へ舵を切っているが、先制的な無害化措置と通信の秘密・プライバシー保護との緊張関係が大きな論点になっている。",
+      "summaryPoints": [
+            {
+                  "label": "受動的防御から能動的サイバー防御へ",
+                  "text": "攻撃を受けてから対処する従来型では重要インフラを守りきれないため、攻撃元サーバーの監視や無害化を含む能動的防御（Active Cyber Defense）への移行が進められている。"
+            },
+            {
+                  "label": "AIのデュアルユース（軍民両用）リスク",
+                  "text": "生成AIは防衛・生産性向上に不可欠な一方、海洋・地政学領域での偽情報工作や自動化されたサイバー攻撃にも転用されやすく、国際競争と安全規制のジレンマを生んでいる。"
+            },
+            {
+                  "label": "国家AI投資と国際競争力",
+                  "text": "米中をはじめ各国がAIインフラへ巨額投資を行う中、日本は投資規模の差を埋めつつ、信頼性の高いガバナンスと官民連携をどう両立するかが課題となっている。"
+            }
+      ],
+      "quote": null,
+      "memoryTip": "dual-use（軍民両用）＋ strike a balance between A and B（AとBのバランスを取る）＋ preemptive（先制的な）の3点セットが安全保障・AI議論の軸になる。",
+      "phrases": [
+            {
+                  "phrase": "dual-use technology",
+                  "speakPhrase": "dual-use technology",
+                  "meaning": "デュアルユース技術（民生と軍事・悪用の両方に転用できる技術）",
+                  "enDef": "Technology that can be used for both peaceful civilian purposes and military or malicious applications.",
+                  "synonyms": [
+                        "multi-purpose tech",
+                        "civil-military technology"
+                  ],
+                  "example": "Advanced AI is a classic dual-use technology that boosts productivity while enabling automated cyberattacks.",
+                  "exampleJa": "高度なAIは生産性を高める一方で自動サイバー攻撃も可能にする、典型的なデュアルユース技術だ。"
+            },
+            {
+                  "phrase": "strike a balance between A and B",
+                  "speakPhrase": "strike a balance between",
+                  "meaning": "AとBの間で適切なバランスを取る",
+                  "enDef": "To find a fair and sensible compromise between two competing priorities or demands.",
+                  "synonyms": [
+                        "find middle ground",
+                        "reconcile A and B",
+                        "balance competing priorities"
+                  ],
+                  "example": "Policymakers must strike a balance between national security and the constitutional right to privacy.",
+                  "exampleJa": "政策決定者は国家安全保障と憲法上のプライバシー権の間で適切なバランスを取る必要がある。"
+            },
+            {
+                  "phrase": "preemptive measure",
+                  "speakPhrase": "preemptive measure",
+                  "meaning": "先制的措置、事前予防策",
+                  "enDef": "An action taken in advance to prevent a predicted attack, threat, or crisis from occurring.",
+                  "synonyms": [
+                        "proactive step",
+                        "preventive action",
+                        "anticipatory measure"
+                  ],
+                  "example": "Active cyber defense relies on preemptive measures to neutralize threats before critical infrastructure is hit.",
+                  "exampleJa": "能動的サイバー防御は、重要インフラが攻撃される前に脅威を無害化する先制的措置に依拠している。"
+            },
+            {
+                  "phrase": "critical infrastructure",
+                  "speakPhrase": "critical infrastructure",
+                  "meaning": "重要インフラ（電力・通信・金融・医療など社会基盤）",
+                  "enDef": "Essential physical and digital systems—such as power grids, hospitals, and finance—vital to a nation’s functioning.",
+                  "synonyms": [
+                        "vital public systems",
+                        "core national infrastructure"
+                  ],
+                  "example": "A coordinated attack on critical infrastructure could paralyze daily life within hours.",
+                  "exampleJa": "重要インフラへの組織的な攻撃は、数時間以内に日常生活を麻痺させ得る。"
+            },
+            {
+                  "phrase": "state-sponsored",
+                  "speakPhrase": "state-sponsored",
+                  "meaning": "国家が支援・関与する",
+                  "enDef": "Funded, directed, or tacitly supported by a national government.",
+                  "synonyms": [
+                        "government-backed",
+                        "state-backed",
+                        "nation-state led"
+                  ],
+                  "example": "Private firms alone struggle to defend against sophisticated, state-sponsored cyber operations.",
+                  "exampleJa": "民間企業だけで、洗練された国家支援型のサイバー作戦に対抗するのは困難だ。"
+            },
+            {
+                  "phrase": "unintended escalation",
+                  "speakPhrase": "unintended escalation",
+                  "meaning": "意図しないエスカレーション（対立・報復の激化）",
+                  "enDef": "An accidental intensification of conflict or retaliation beyond what either side originally intended.",
+                  "synonyms": [
+                        "accidental spiral",
+                        "inadvertent retaliation",
+                        "uncontrolled flare-up"
+                  ],
+                  "example": "Without clear international norms, proactive cyber operations risk triggering unintended escalation.",
+                  "exampleJa": "明確な国際規範がなければ、先制的なサイバー作戦は意図しないエスカレーションを引き起こすリスクがある。"
+            }
+      ],
+      "perspectives": [
+            {
+                  "title": "プライバシーと憲法上の歯止めの視点",
+                  "ja": "能動的サイバー防御は抑止力を高める一方で、通信監視が常態化すれば「通信の秘密」が形骸化する恐れがあり、独立した第三者機関による厳格な監督が不可欠ではないか。",
+                  "en": "While active cyber defense strengthens deterrence, routine traffic monitoring could hollow out the secrecy of communications—so strict oversight by an independent body is indispensable, isn't it?"
+            },
+            {
+                  "title": "誤帰属と国際紛争エスカレーションの視点",
+                  "ja": "サイバー空間では攻撃元の特定（アトリビューション）が極めて難しいため、先制的な無害化措置が第三国の無関係なサーバーを誤爆し、外交問題や報復の連鎖を招くリスクがある。",
+                  "en": "Because attributing cyberattacks is notoriously difficult, preemptive neutralization carries the risk of hitting innocent servers in third countries and triggering diplomatic fallout or unintended escalation."
+            },
+            {
+                  "title": "AI投資の量より質・ニッチ戦略の視点",
+                  "ja": "日本のAI投資額は米中に比べて見劣りしても、巨額資本競争に正面から挑むより、ロボティクスや産業データ、信頼できるAIガバナンスなど自国の強みに特化する方が勝算があるのではないか。",
+                  "en": "Even if Japan lags behind the U.S. and China in total AI investment, wouldn't it be smarter to focus on domestic strengths like robotics, industrial data, and trustworthy AI governance rather than competing head-on in raw capital?"
+            }
+      ],
+      "questions": [
+            {
+                  "id": "cyb-1",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：国家安全保障とプライバシー権のバランスを取る）",
+                  "context": "Policymakers must ( ______ ) national security and the constitutional right to privacy.",
+                  "completedSentence": "Policymakers must strike a balance between national security and the constitutional right to privacy.",
+                  "options": [
+                        "strike a balance between",
+                        "take a toll on",
+                        "dwell on",
+                        "be lost on"
+                  ],
+                  "answer": 0,
+                  "explanation": "strike a balance between A and B は、相反する2つの価値（安全保障と自由、成長と環境など）の折衷点を探る議論の必須フレーズです。"
+            },
+            {
+                  "id": "cyb-2",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：民生と軍事・悪用の両方に転用できる技術）",
+                  "context": "Advanced AI is a classic ( ______ ) that boosts productivity while enabling automated cyberattacks.",
+                  "completedSentence": "Advanced AI is a classic dual-use technology that boosts productivity while enabling automated cyberattacks.",
+                  "options": [
+                        "echo chamber",
+                        "dual-use technology",
+                        "civic engagement",
+                        "logical conclusion"
+                  ],
+                  "answer": 1,
+                  "explanation": "dual-use technology（軍民両用技術）はAI・ドローン・宇宙・バイオなどの先端技術ガバナンスで頻出します。"
+            },
+            {
+                  "id": "cyb-3",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：意図しないエスカレーションを引き起こすリスクがある）",
+                  "context": "Without clear international norms, proactive cyber operations risk triggering ( ______ ).",
+                  "completedSentence": "Without clear international norms, proactive cyber operations risk triggering unintended escalation.",
+                  "options": [
+                        "unintended escalation",
+                        "occupational boredom",
+                        "slacktivism",
+                        "day-tight compartments"
+                  ],
+                  "answer": 0,
+                  "explanation": "unintended escalation（意図しない対立の激化）は国際政治やサイバー安全保障の議論で非常によく使われます。"
+            },
+            {
+                  "id": "cyb-4",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【プライバシーと憲法上の歯止めの視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Routine traffic monitoring could hollow out the secrecy of communications, so ( ______ ) is indispensable.",
+                  "completedSentence": "Routine traffic monitoring could hollow out the secrecy of communications, so strict oversight by an independent body is indispensable.",
+                  "translation": "日常的な通信監視は「通信の秘密」を形骸化させかねないため、独立した第三者機関による厳格な監督が不可欠だ。",
+                  "options": [
+                        "strict oversight by an independent body",
+                        "a complete overhaul of civilization",
+                        "an idealistic luxury of the wealthy",
+                        "a short intentional break"
+                  ],
+                  "answer": 0,
+                  "explanation": "strict oversight by an independent body（独立機関による厳格な監督）と hollow out（形骸化させる）は、人権と治安のバランスを論じる際に強力です。"
+            },
+            {
+                  "id": "cyb-5",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【誤帰属と国際紛争エスカレーションの視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Because ( ______ ) is notoriously difficult, preemptive neutralization risks hitting innocent servers in third countries.",
+                  "completedSentence": "Because attributing cyberattacks is notoriously difficult, preemptive neutralization risks hitting innocent servers in third countries.",
+                  "translation": "サイバー攻撃の攻撃元特定（アトリビューション）は極めて難しいため、先制的な無害化は第三国の無関係なサーバーを誤って標的にするリスクがある。",
+                  "options": [
+                        "attributing cyberattacks",
+                        "living in day-tight compartments",
+                        "shedding remnant colonialism",
+                        "breeding cynicism"
+                  ],
+                  "answer": 0,
+                  "explanation": "attribute ~（〜の原因・実行者を特定する）はサイバー分野で「アトリビューション（攻撃元特定）」を指す専門的にも正確な動詞です。"
+            },
+            {
+                  "id": "cyb-6",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【AI投資の量より質・ニッチ戦略の視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "Wouldn't it be smarter to focus on domestic strengths like robotics and industrial data rather than ( ______ )?",
+                  "completedSentence": "Wouldn't it be smarter to focus on domestic strengths like robotics and industrial data rather than competing head-on in raw capital?",
+                  "translation": "巨額の資本力で正面から競い合うよりも、ロボティクスや産業データといった国内の強みに特化する方が賢明ではないだろうか。",
+                  "options": [
+                        "competing head-on in raw capital",
+                        "dwelling on past mistakes",
+                        "missing critical tipping points",
+                        "warding off chronic fatigue"
+                  ],
+                  "answer": 0,
+                  "explanation": "compete head-on（正面から真っ向勝負する）＋ raw capital（純粋な資本力）で、規模の劣勢を戦略で補う視点をシャープに表現できます。"
+            }
+      ]
+},
+      {
+      "id": "thelma-ageism-aging",
+      "title": "Thelma (2024): Ageism & Successful Aging Theory",
+      "shortTitle": "Thelma (2024) & Ageism",
+      "meta": "映画・社会学分析ノート（June Squibb 主演『Thelma』における老いの表象・エイジズム・サクセスフル・エイジング理論）",
+      "tags": [
+            "映画分析",
+            "社会学",
+            "エイジズム",
+            "高齢社会"
+      ],
+      "addedAt": "2026-11-25",
+      "oneLiner": "93歳の主人公が詐欺師からお金を取り戻す映画『Thelma』は、高齢者を「守られるだけの受動的な存在」と見なすエイジズムをユーモラスに覆し、主体性（agency）と社会的なつながりの大切さを描き出している。",
+      "summaryPoints": [
+            {
+                  "label": "善意のエイジズム（Benevolent Ageism）の可視化",
+                  "text": "家族の心配や過保護は愛情から生まれているものの、結果として高齢者から自己決定権や尊厳を奪ってしまう構造を丁寧に描いている。"
+            },
+            {
+                  "label": "アクション映画の定型（trope）の反転",
+                  "text": "電動スクーターでの追跡などアクション映画の文法をあえて93歳の主人公に重ねることで、老いに対する固定観念（stereotype）を笑いと共感で解体している。"
+            },
+            {
+                  "label": "サクセスフル・エイジング理論との接点",
+                  "text": "単に病気がないことだけでなく、身体的な制約を抱えながらも自らの意思で行動し、他者との関係を保ち続けることが「よく老いる」ことにつながると示唆している。"
+            }
+      ],
+      "quote": null,
+      "memoryTip": "subvert stereotypes（固定観念を覆す）と strip someone of agency（人から主体性を奪う）は、映画批評や社会問題の議論全般でそのまま使い回せる強力な表現。",
+      "phrases": [
+            {
+                  "phrase": "subvert stereotypes",
+                  "speakPhrase": "subvert stereotypes",
+                  "meaning": "固定観念・ステレオタイプを覆す",
+                  "enDef": "To challenge and overturn conventional, oversimplified beliefs about a group of people.",
+                  "synonyms": [
+                        "challenge clichés",
+                        "defy expectations",
+                        "turn tropes upside down"
+                  ],
+                  "example": "Thelma cleverly subverts stereotypes that portray older adults as helpless victims.",
+                  "exampleJa": "『Thelma』は高齢者を無力な被害者として描く固定観念を巧みに覆している。"
+            },
+            {
+                  "phrase": "sense of agency",
+                  "speakPhrase": "sense of agency",
+                  "meaning": "主体性、自分の人生を自分で決めている感覚",
+                  "enDef": "The feeling that one has control over one’s own actions, choices, and life direction.",
+                  "synonyms": [
+                        "autonomy",
+                        "self-determination",
+                        "personal control"
+                  ],
+                  "example": "Preserving a sense of agency is crucial to dignity and well-being in later life.",
+                  "exampleJa": "老後の尊厳と幸福感にとって、主体性の感覚を保つことは極めて重要だ。"
+            },
+            {
+                  "phrase": "well-meaning",
+                  "speakPhrase": "well-meaning",
+                  "meaning": "善意の、良かれと思っての（結果が裏目に出る文脈で定番）",
+                  "enDef": "Having good intentions, even if the resulting actions turn out to be unhelpful or patronizing.",
+                  "synonyms": [
+                        "well-intentioned",
+                        "good-hearted",
+                        "sincere"
+                  ],
+                  "example": "Even well-meaning family members can unintentionally infantilize elderly relatives.",
+                  "exampleJa": "善意の家族であっても、意図せず高齢の親族を子ども扱いしてしまうことがある。"
+            },
+            {
+                  "phrase": "patronizing",
+                  "speakPhrase": "patronizing",
+                  "meaning": "上から目線の、恩着せがましい（親切そうに見えて見下している）",
+                  "enDef": "Treating someone with apparent kindness while subtly implying they are less capable or inferior.",
+                  "synonyms": [
+                        "condescending",
+                        "talk-down-to",
+                        "paternalistic"
+                  ],
+                  "example": "The film highlights how patronizing attitudes often masquerade as concern for safety.",
+                  "exampleJa": "この映画は、上から目線の態度がいかに「安全への配慮」を装って現れるかを浮き彫りにしている。"
+            },
+            {
+                  "phrase": "double-edged sword",
+                  "speakPhrase": "double-edged sword",
+                  "meaning": "諸刃の剣（良い面と悪い面の両方を持つもの）",
+                  "enDef": "Something that has both favorable benefits and serious drawbacks or risks at the same time.",
+                  "synonyms": [
+                        "mixed blessing",
+                        "two-sided coin"
+                  ],
+                  "example": "Successful Aging Theory can be a double-edged sword if it makes frail seniors feel like failures.",
+                  "exampleJa": "サクセスフル・エイジング理論は、虚弱な高齢者に失敗感を抱かせるなら諸刃の剣になり得る。"
+            },
+            {
+                  "phrase": "come to terms with ~",
+                  "speakPhrase": "come to terms with",
+                  "meaning": "〜を受け入れる、折り合いをつける",
+                  "enDef": "To gradually accept a difficult, painful, or unavoidable reality.",
+                  "synonyms": [
+                        "make peace with",
+                        "accept",
+                        "reconcile oneself to"
+                  ],
+                  "example": "The story captures how both seniors and their families come to terms with physical decline.",
+                  "exampleJa": "その物語は、高齢者自身とその家族の双方が身体的な衰えとどう折り合いをつけるかを捉えている。"
+            }
+      ],
+      "perspectives": [
+            {
+                  "title": "サクセスフル・エイジング理論への批判的視点",
+                  "ja": "「活動的で自立した高齢者」を理想化しすぎると、病気や経済的制約で自立が難しい高齢者に自己責任のプレッシャーを与えてしまうのではないか。",
+                  "en": "If we idealize active, independent seniors too heavily, doesn't Successful Aging Theory risk placing unfair pressure on older adults who face illness or financial barriers?"
+            },
+            {
+                  "title": "家族の安全配慮の現実的なジレンマの視点",
+                  "ja": "家族の介入をエイジズムと批判するのは簡単だが、実際に詐欺被害や転倒リスクが深刻ななかで、本人の自由と安全の線引きをするのは現実には非常に難しい。",
+                  "en": "It is easy to criticize family intervention as ageist, yet when scams and fall risks are genuinely serious, drawing the line between an older person's freedom and safety is extremely difficult in practice."
+            },
+            {
+                  "title": "個人のがんばりより社会インフラ整備の視点",
+                  "ja": "高齢者の主体性を守るには、映画のように個人の気概に頼るだけでなく、詐欺対策の法整備や移動しやすい街づくりといった社会全体の仕組みが欠かせないはずだ。",
+                  "en": "To protect older adults' autonomy, we shouldn't rely solely on individual grit as in a movie—we also need stronger anti-scam regulations and age-friendly public infrastructure."
+            }
+      ],
+      "questions": [
+            {
+                  "id": "thl-1",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：高齢者を無力な被害者として描く固定観念を覆す）",
+                  "context": "Thelma cleverly ( ______ ) that portray older adults as helpless victims.",
+                  "completedSentence": "Thelma cleverly subverts stereotypes that portray older adults as helpless victims.",
+                  "options": [
+                        "subverts stereotypes",
+                        "breeds cynicism",
+                        "dwells on tropes",
+                        "takes a toll on"
+                  ],
+                  "answer": 0,
+                  "explanation": "subvert stereotypes（固定観念を覆す）は、映画・広告・文学・ジェンダーやエイジズムを語るときの鉄板表現です。"
+            },
+            {
+                  "id": "thl-2",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：主体性の感覚を保つことが重要だ）",
+                  "context": "Preserving a ( ______ ) is crucial to dignity and well-being in later life.",
+                  "completedSentence": "Preserving a sense of agency is crucial to dignity and well-being in later life.",
+                  "options": [
+                        "sense of agency",
+                        "double-edged sword",
+                        "preemptive measure",
+                        "echo chamber"
+                  ],
+                  "answer": 0,
+                  "explanation": "sense of agency（主体性の感覚・自己決定感）は心理学・社会学・日常のキャリア論でも頻出する洗練された語句です。"
+            },
+            {
+                  "id": "thl-3",
+                  "category": "phrases",
+                  "categoryLabel": "重要フレーズ",
+                  "prompt": "空欄に入る最も適切な表現を選んでください。（意味：身体的な衰えと折り合いをつける）",
+                  "context": "The story captures how both seniors and their families ( ______ ) physical decline.",
+                  "completedSentence": "The story captures how both seniors and their families come to terms with physical decline.",
+                  "options": [
+                        "come to terms with",
+                        "translate into",
+                        "ward off",
+                        "burn out"
+                  ],
+                  "answer": 0,
+                  "explanation": "come to terms with ~ は「（避けられない現実や困難を）受け入れる、折り合いをつける」という意味の定番イディオムです。"
+            },
+            {
+                  "id": "thl-4",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【サクセスフル・エイジング理論への批判的視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "If we idealize active seniors too heavily, doesn't the theory risk ( ______ ) on older adults who face illness or financial barriers?",
+                  "completedSentence": "If we idealize active seniors too heavily, doesn't the theory risk placing unfair pressure on older adults who face illness or financial barriers?",
+                  "translation": "活動的な高齢者を理想化しすぎると、病気や経済的障壁を抱える高齢者に不当なプレッシャーを与えるリスクがあるのではないか。",
+                  "options": [
+                        "placing unfair pressure",
+                        "shedding remnant colonialism",
+                        "competing head-on",
+                        "triggering escalation"
+                  ],
+                  "answer": 0,
+                  "explanation": "place unfair pressure on ~（〜に不当なプレッシャーをかける）で、理想論が弱者を追い詰める側面を的確に指摘できます。"
+            },
+            {
+                  "id": "thl-5",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【家族の安全配慮の現実的なジレンマの視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "When scams and fall risks are genuinely serious, ( ______ ) between an older person's freedom and safety is extremely difficult.",
+                  "completedSentence": "When scams and fall risks are genuinely serious, drawing the line between an older person's freedom and safety is extremely difficult.",
+                  "translation": "詐欺や転倒のリスクが本当に深刻なとき、高齢者の自由と安全の線引きをするのは極めて難しい。",
+                  "options": [
+                        "drawing the line",
+                        "taking it to its logical conclusion",
+                        "missing tipping points",
+                        "dwelling on mistakes"
+                  ],
+                  "answer": 0,
+                  "explanation": "draw the line between A and B（AとBの線引きをする）は、自由と安全などのジレンマを語るときにそのまま使える自然な会話表現です。"
+            },
+            {
+                  "id": "thl-6",
+                  "category": "discussion",
+                  "categoryLabel": "別視点の英訳",
+                  "prompt": "【個人のがんばりより社会インフラ整備の視点】空欄に入る最も自然な英語表現を選んでください。",
+                  "context": "To protect older adults' autonomy, we shouldn't rely solely on ( ______ )—we also need stronger anti-scam regulations and age-friendly infrastructure.",
+                  "completedSentence": "To protect older adults' autonomy, we shouldn't rely solely on individual grit—we also need stronger anti-scam regulations and age-friendly infrastructure.",
+                  "translation": "高齢者の自律を守るには個人の気概だけに頼るのではなく、より強力な詐欺対策規制や高齢者に優しい社会インフラも必要だ。",
+                  "options": [
+                        "individual grit",
+                        "dual-use technology",
+                        "civic engagement",
+                        "occupational boredom"
+                  ],
+                  "answer": 0,
+                  "explanation": "individual grit（個人の気概・やり抜く力）と age-friendly infrastructure（高齢者に優しい社会インフラ）の対比で、個人論から構造論へ議論を広げられます。"
+            }
+      ]
+}
+    ];
+
+    const STORAGE_KEY = 'english_article_notes_extra_v3';
+    const CARD_PROGRESS_KEY = 'english_article_card_progress_v1';
+    const VOICE_PREF_KEY = 'english_article_voice_pref_v1';
+    const ACCENT_PREF_KEY = 'english_article_accent_pref_v1';
+
+    function loadAccentPref() {
+      try {
+        return localStorage.getItem(ACCENT_PREF_KEY) || 'en-US';
+      } catch (e) {
+        return 'en-US';
+      }
+    }
+
+    const GENDER_PREF_KEY = 'english_article_gender_pref_v1';
+
+    function loadGenderPref() {
+      try {
+        return localStorage.getItem(GENDER_PREF_KEY) || 'all';
+      } catch (e) {
+        return 'all';
+      }
+    }
+
+    function saveGenderPref(gender) {
+      try {
+        localStorage.setItem(GENDER_PREF_KEY, gender || 'all');
+      } catch (e) {}
+    }
+
+    function saveAccentPref(accent) {
+      try {
+        localStorage.setItem(ACCENT_PREF_KEY, accent || 'en-US');
+      } catch (e) {}
+    }
+    const AI_VOICE_CONFIG_KEY = 'english_article_ai_voice_v1';
+
+    function loadAiVoiceConfig() {
+      try {
+        const raw = localStorage.getItem(AI_VOICE_CONFIG_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {}
+      return { engine: 'browser', apiKey: '', voice: 'coral', model: 'gpt-4o-mini-tts' };
+    }
+
+    function saveAiVoiceConfig(cfg) {
+      try {
+        localStorage.setItem(AI_VOICE_CONFIG_KEY, JSON.stringify(cfg));
+      } catch (e) {}
+    }
+
+    function loadVoicePref() {
+      try {
+        return localStorage.getItem(VOICE_PREF_KEY) || '';
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function saveVoicePref(uri) {
+      try {
+        localStorage.setItem(VOICE_PREF_KEY, uri || '');
+      } catch (e) {}
+    }
+
+    function loadCardProgress() {
+      try {
+        const raw = localStorage.getItem(CARD_PROGRESS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      } catch (e) {}
+      return {};
+    }
+
+    function saveCardProgress(progressMap) {
+      try {
+        localStorage.setItem(CARD_PROGRESS_KEY, JSON.stringify(progressMap));
+      } catch (e) {}
+    }
+
+    function loadArticles() {
+      const merged = INITIAL_ARTICLES.map((a) => ({ ...a }));
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const extras = JSON.parse(raw);
+          if (Array.isArray(extras)) {
+            extras.forEach((ext) => {
+              if (ext && ext.id && !merged.some((m) => m.id === ext.id)) {
+                merged.push(ext);
+              }
+            });
+          }
+        }
+      } catch (e) {
+        // Ignore storage restrictions
+      }
+      return merged;
+    }
+
+    function saveExtraArticles(allArticles) {
+      const initialIds = new Set(INITIAL_ARTICLES.map((a) => a.id));
+      const extras = allArticles.filter((a) => !initialIds.has(a.id));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(extras));
+      } catch (e) {
+        // Ignore storage restrictions
+      }
+    }
+
+    // State
+    const state = {
+      articles: loadArticles(),
+      selectedArticleId: 'half-earth-whole-earth',
+      mode: 'summary', // 'summary' | 'quiz' | 'cards'
+      hidePerspectiveJa: false,
+      quizAllArticles: false,
+      quizRandomize: false,
+      selectedCategory: 'all',
+      activeQuestions: [],
+      currentIndex: 0,
+      answered: false,
+      answers: [],
+      cardIndex: 0,
+      cardFlipped: false,
+      cardFilter: 'all', // 'all' | 'unmastered' | 'mastered'
+      cardProgress: loadCardProgress(), // { 'articleId::phrase': 'known' | 'review' }
+      speechRate: 1.0,
+      selectedAccent: loadAccentPref(),
+      selectedGender: loadGenderPref(),
+      shadowMode: false,
+      speechSessionId: 0,
+      speechTimers: [],
+      selectedVoiceURI: loadVoicePref(),
+      rankedVoices: [],
+      aiVoice: loadAiVoiceConfig(),
+      audioCache: new Map(),
+      currentAudioEl: null,
+      playerQueue: [],
+      playerIndex: 0,
+      isPaused: false,
+      currentTokens: []
+    };
+
+    // DOM Elements
+    const toastEl = document.getElementById('toast');
+    const tabSummary = document.getElementById('tab-summary');
+    const tabQuiz = document.getElementById('tab-quiz');
+    const tabCards = document.getElementById('tab-cards');
+    const summaryView = document.getElementById('summary-view');
+    const quizView = document.getElementById('quiz-view');
+    const cardsView = document.getElementById('cards-view');
+    const articleSelect = document.getElementById('article-select');
+    const voiceSelect = document.getElementById('voice-select');
+    const accentButtons = document.querySelectorAll('.accent-btn');
+    const genderButtons = document.querySelectorAll('.gender-btn');
+    const toggleShadowBtn = document.getElementById('toggle-shadow-btn');
+    const globalStopBtn = document.getElementById('global-stop-btn');
+    const playingStatusLabel = document.getElementById('playing-status-label');
+    const playAllPhrasesBtn = document.getElementById('play-all-phrases-btn');
+    const playAllPerspBtn = document.getElementById('play-all-persp-btn');
+    const nrPlayerBar = document.getElementById('nr-player-bar');
+    const nrCaption = document.getElementById('nr-caption');
+    const nrTrackCounter = document.getElementById('nr-track-counter');
+    const nrPrevBtn = document.getElementById('nr-prev-btn');
+    const nrPlayPauseBtn = document.getElementById('nr-playpause-btn');
+    const nrNextBtn = document.getElementById('nr-next-btn');
+    const nrStopBtn = document.getElementById('nr-stop-btn');
+    const nrVoiceBadge = document.getElementById('nr-voice-badge');
+    const nrSpeedSlider = document.getElementById('nr-speed-slider');
+    const nrSpeedVal = document.getElementById('nr-speed-val');
+    const openVoiceModalBtn = document.getElementById('open-voice-modal-btn');
+    const voiceModal = document.getElementById('voice-modal');
+    const closeVoiceModalBtn = document.getElementById('close-voice-modal-btn');
+    const engineBrowserBtn = document.getElementById('engine-browser-btn');
+    const engineOpenaiBtn = document.getElementById('engine-openai-btn');
+    const openaiConfigPanel = document.getElementById('openai-config-panel');
+    const openaiKeyInput = document.getElementById('openai-key-input');
+    const openaiVoiceSelect = document.getElementById('openai-voice-select');
+    const openaiModelSelect = document.getElementById('openai-model-select');
+    const testOpenaiVoiceBtn = document.getElementById('test-openai-voice-btn');
+    const saveVoiceSettingsBtn = document.getElementById('save-voice-settings-btn');
+    const rateButtons = document.querySelectorAll('.rate-btn');
+
+    // Summary Elements
+    const metaTags = document.getElementById('meta-tags');
+    const artTitle = document.getElementById('art-title');
+    const artMeta = document.getElementById('art-meta');
+    const artOneliner = document.getElementById('art-oneliner');
+    const artSummaryList = document.getElementById('art-summary-list');
+    const artQuoteWrap = document.getElementById('art-quote-wrap');
+    const artQuoteText = document.getElementById('art-quote-text');
+    const artQuoteAuthor = document.getElementById('art-quote-author');
+    const speakQuoteBtn = document.getElementById('speak-quote-btn');
+    const phraseCountBadge = document.getElementById('phrase-count-badge');
+    const phrasesList = document.getElementById('phrases-list');
+    const artMemoryTipWrap = document.getElementById('art-memory-tip-wrap');
+    const artMemoryTip = document.getElementById('art-memory-tip');
+    const toggleJpBtn = document.getElementById('toggle-jp-btn');
+    const perspectivesList = document.getElementById('perspectives-list');
+
+    // Quiz Elements
+    const catButtons = document.querySelectorAll('.cat-btn');
+    const catAllBtn = document.getElementById('cat-all-btn');
+    const catPhrasesBtn = document.getElementById('cat-phrases-btn');
+    const catDiscussionBtn = document.getElementById('cat-discussion-btn');
+    const shuffleQuizBtn = document.getElementById('shuffle-quiz-btn');
+    const toggleAllArticlesQuizBtn = document.getElementById('toggle-all-articles-quiz-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressLabel = document.getElementById('progress-label');
+    const scoreLabel = document.getElementById('score-label');
+    const progressBar = document.getElementById('progress-bar');
+    const questionCard = document.getElementById('question-card');
+    const qBadge = document.getElementById('q-badge');
+    const qArticleTag = document.getElementById('q-article-tag');
+    const qNumber = document.getElementById('q-number');
+    const qPrompt = document.getElementById('q-prompt');
+    const qContextWrap = document.getElementById('q-context-wrap');
+    const qContext = document.getElementById('q-context');
+    const speakQuestionBtn = document.getElementById('speak-question-btn');
+    const speakQuestionLabel = document.getElementById('speak-question-label');
+    const optionsList = document.getElementById('options-list');
+    const feedbackBox = document.getElementById('feedback-box');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const speakCompleteBtn = document.getElementById('speak-complete-btn');
+    const feedbackTranslation = document.getElementById('feedback-translation');
+    const feedbackText = document.getElementById('feedback-text');
+    const nextBtn = document.getElementById('next-btn');
+    const restartInlineBtn = document.getElementById('restart-inline-btn');
+    const resultCard = document.getElementById('result-card');
+    const resultScoreText = document.getElementById('result-score-text');
+    const resultMessage = document.getElementById('result-message');
+    const categoryBreakdown = document.getElementById('category-breakdown');
+    const retryWrongBtn = document.getElementById('retry-wrong-btn');
+    const retryAllBtn = document.getElementById('retry-all-btn');
+    const reviewList = document.getElementById('review-list');
+
+    // Flashcard Elements
+    const cfButtons = document.querySelectorAll('.cf-btn');
+    const cfAllBtn = document.getElementById('cf-all-btn');
+    const cfUnmasteredBtn = document.getElementById('cf-unmastered-btn');
+    const cfMasteredBtn = document.getElementById('cf-mastered-btn');
+    const cardMasteryLabel = document.getElementById('card-mastery-label');
+    const cardMasteryBar = document.getElementById('card-mastery-bar');
+    const resetCardProgressBtn = document.getElementById('reset-card-progress-btn');
+    const cardStatusBadge = document.getElementById('card-status-badge');
+    const cardRatingRow = document.getElementById('card-rating-row');
+    const markReviewBtn = document.getElementById('mark-review-btn');
+    const markKnownBtn = document.getElementById('mark-known-btn');
+    const cardCounter = document.getElementById('card-counter');
+    const flashcardArea = document.getElementById('flashcard-area');
+    const cardArticleLabel = document.getElementById('card-article-label');
+    const cardSideLabel = document.getElementById('card-side-label');
+    const cardMainText = document.getElementById('card-main-text');
+    const cardSubText = document.getElementById('card-sub-text');
+    const cardExampleJa = document.getElementById('card-example-ja');
+    const cardDetailsWrap = document.getElementById('card-details-wrap');
+    const cardEndefRow = document.getElementById('card-endef-row');
+    const cardEndefText = document.getElementById('card-endef-text');
+    const cardSynRow = document.getElementById('card-syn-row');
+    const cardSynList = document.getElementById('card-syn-list');
+    const speakCardBtn = document.getElementById('speak-card-btn');
+    const speakCardLabel = document.getElementById('speak-card-label');
+    const prevCardBtn = document.getElementById('prev-card-btn');
+    const flipCardBtn = document.getElementById('flip-card-btn');
+    const nextCardBtn = document.getElementById('next-card-btn');
+
+    // Modal Elements
+    const dataModal = document.getElementById('data-modal');
+    const openDataModalBtn = document.getElementById('open-data-modal-btn');
+    const closeDataModalBtn = document.getElementById('close-data-modal-btn');
+    const registeredArticlesList = document.getElementById('registered-articles-list');
+    const importJsonInput = document.getElementById('import-json-input');
+    const copyJsonBtn = document.getElementById('copy-json-btn');
+    const importJsonBtn = document.getElementById('import-json-btn');
+
+    let toastTimer = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toastEl.classList.add('hidden');
+      }, 2600);
+    }
+
+    // Speech Synthesis (Native-Quality Voice Ranking & Natural Phrasing)
+    const ROBOTIC_VOICE_RE = /Zarvox|Trinoids|Bells|Boing|Bubbles|Cellos|Whisper|Bad News|Good News|Fred|Albert|Ralph|Junior|Kathy|Bahh|Jester|Organ|Superstar|Wobble|eSpeak|Compact|Hysterical|Deranged/i;
+    const NEURAL_VOICE_RE = /Natural|Neural|Premium|Enhanced|Siri|Online|Google US English|Google UK English|Aria|Jenny|Guy|Ava|Zoe|Evan|Steffan|Andrew|Emma|Brian|Sonia|Libby|Ryan/i;
+    const GOOD_NATIVE_RE = /Samantha|Daniel|Karen|Moira|Tessa|Alex|Serena|Martha|Arthur|Aaron|Nicky|Rishi|Veena|Victoria|Oliver/i;
+    const FEMALE_VOICE_RE = /Female|Samantha|Victoria|Karen|Moira|Tessa|Serena|Martha|Ava|Zoe|Nicky|Allison|Susan|Zira|Aria|Jenny|Sonia|Libby|Natasha|Clara|Neerja|Emma|Michelle|Ana|Stephanie|Kate|Fiona|Veena|Hazel|Catherine|Shelley|Sandy|Flo|Google US English/i;
+    const MALE_VOICE_RE = /Male|Daniel|Alex|Arthur|Aaron|Evan|Oliver|Rishi|David|Mark|Guy|Andrew|Brian|Ryan|William|Liam|Prabhat|Christopher|Eric|Steffan|George|Thomas|James|Gordon|Reed|Eddy|Rocko/i;
+
+    function detectVoiceGender(v) {
+      const name = v.name || '';
+      if (MALE_VOICE_RE.test(name) && !/Female/i.test(name)) return 'male';
+      if (FEMALE_VOICE_RE.test(name)) return 'female';
+      return 'unknown';
+    }
+
+    function renderNrCaption(text) {
+      nrCaption.innerHTML = '';
+      state.currentTokens = [];
+      let cursor = 0;
+      const regex = /\S+/g;
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        if (match.index > cursor) {
+          nrCaption.appendChild(document.createTextNode(text.slice(cursor, match.index)));
+        }
+        const span = document.createElement('span');
+        span.className = 'nr-word';
+        span.textContent = match[0];
+        nrCaption.appendChild(span);
+        state.currentTokens.push({ start: match.index, end: match.index + match[0].length, el: span });
+        cursor = match.index + match[0].length;
+      }
+      if (cursor < text.length) {
+        nrCaption.appendChild(document.createTextNode(text.slice(cursor)));
+      }
+    }
+
+    function highlightWordAtCharIndex(charIndex) {
+      if (!state.currentTokens.length) return;
+      let activeEl = null;
+      for (let i = 0; i < state.currentTokens.length; i++) {
+        const t = state.currentTokens[i];
+        const isHit = charIndex >= t.start && charIndex < t.end;
+        t.el.classList.toggle('nr-word-active', isHit);
+        if (isHit) activeEl = t.el;
+      }
+      if (activeEl && activeEl.scrollIntoView) {
+        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+
+    function syncSpeedControlsUI() {
+      nrSpeedSlider.value = String(state.speechRate);
+      nrSpeedVal.textContent = `${state.speechRate.toFixed(1)}x`;
+      rateButtons.forEach((b) => {
+        const active = Math.abs(parseFloat(b.dataset.rate) - state.speechRate) < 0.01;
+        b.className = active
+          ? 'rate-btn px-2 py-1 rounded-md bg-zinc-800 text-emerald-300 font-semibold'
+          : 'rate-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold';
+      });
+    }
+
+    function setPlayingUI(active, label) {
+      if (active) {
+        playingStatusLabel.textContent = label || '再生中… 停止';
+        globalStopBtn.classList.remove('hidden');
+        nrPlayerBar.classList.remove('hidden');
+        nrPlayPauseBtn.textContent = state.isPaused ? '▶' : '⏸';
+        const voice = getSelectedEnglishVoice();
+        const isAi = state.aiVoice.engine === 'openai' && state.aiVoice.apiKey;
+        nrVoiceBadge.textContent = isAi
+          ? `AI: ${state.aiVoice.voice} (${state.selectedAccent})`
+          : (voice ? formatVoiceLabel(voice) : state.selectedAccent);
+      } else {
+        globalStopBtn.classList.add('hidden');
+        nrPlayerBar.classList.add('hidden');
+        state.isPaused = false;
+      }
+    }
+
+    function stopSpeech() {
+      state.speechSessionId += 1;
+      state.speechTimers.forEach((t) => clearTimeout(t));
+      state.speechTimers = [];
+      if (state.currentAudioEl) {
+        try {
+          state.currentAudioEl.pause();
+          state.currentAudioEl.currentTime = 0;
+        } catch (e) {}
+        state.currentAudioEl = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setPlayingUI(false);
+    }
+
+    const ACCENT_META = {
+      'en-US': { label: 'アメリカ英語', enName: 'American English' },
+      'en-GB': { label: 'イギリス英語', enName: 'British English' },
+      'en-AU': { label: 'オーストラリア英語', enName: 'Australian English' },
+      'en-CA': { label: 'カナダ英語', enName: 'Canadian English' },
+      'en-IN': { label: 'インド英語', enName: 'Indian English' }
+    };
+
+    function normalizeLang(lang) {
+      return (lang || '').replace('_', '-').toLowerCase();
+    }
+
+    const IPHONE_TOP_VOICES_RE = /Ava|Zoe|Evan|Nathan|Serena|Stephanie|Daniel|Oliver|Karen|Lee|Rishi|Siri/i;
+
+    function scoreEnglishVoice(v, targetAccent) {
+      const lang = normalizeLang(v.lang);
+      if (!lang.startsWith('en')) return -1000;
+      const name = v.name || '';
+      const target = normalizeLang(targetAccent || state.selectedAccent);
+      let score = 0;
+
+      if (ROBOTIC_VOICE_RE.test(name)) score -= 600;
+      if (lang === target) score += 220;
+      else if (target === 'en-ca' && lang === 'en-us') score += 80;
+
+      // Prioritize iPhone/Apple Premium, Enhanced, and Siri voices first
+      if (/Premium/i.test(name)) score += 170;
+      if (/Enhanced|拡張/i.test(name)) score += 150;
+      if (/Siri/i.test(name)) score += 145;
+      if (/Natural|Neural/i.test(name)) score += 140;
+      if (IPHONE_TOP_VOICES_RE.test(name)) score += 60;
+      if (/Google US English|Google UK English/i.test(name)) score += 100;
+      if (NEURAL_VOICE_RE.test(name)) score += 35;
+      if (GOOD_NATIVE_RE.test(name)) score += 30;
+      if (!v.localService) score += 20;
+
+      return score;
+    }
+
+    function formatVoiceLabel(v) {
+      const lang = (v.lang || '').replace('_', '-').toUpperCase();
+      const accent = lang.includes('US') ? 'US' : lang.includes('GB') ? 'UK' : lang.includes('AU') ? 'AU' : lang.includes('CA') ? 'CA' : lang.includes('IN') ? 'IN' : 'EN';
+      const isNeural = NEURAL_VOICE_RE.test(v.name || '') || !v.localService;
+      const cleanName = (v.name || 'English Voice')
+        .replace(/Microsoft |Google |Apple /gi, '')
+        .replace(/ Online \(Natural\)/gi, '')
+        .replace(/ - English \([^)]+\)/gi, '')
+        .trim();
+      return `${isNeural ? '★ ' : ''}[${accent}] ${cleanName}`;
+    }
+
+    function syncAccentButtonsUI() {
+      accentButtons.forEach((btn) => {
+        const active = btn.dataset.accent === state.selectedAccent;
+        btn.className = active
+          ? 'accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-600 text-white transition'
+          : 'accent-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 transition';
+      });
+    }
+
+    function syncGenderButtonsUI() {
+      genderButtons.forEach((btn) => {
+        const active = btn.dataset.gender === state.selectedGender;
+        btn.className = active
+          ? 'gender-btn px-2 py-1 rounded-md bg-zinc-800 text-emerald-300 font-semibold'
+          : 'gender-btn px-2 py-1 rounded-md text-zinc-400 hover:text-zinc-100 font-semibold';
+      });
+    }
+
+    function populateVoices() {
+      if (!('speechSynthesis' in window)) return;
+      const voices = window.speechSynthesis.getVoices() || [];
+      const target = normalizeLang(state.selectedAccent);
+
+      const allEnglish = voices.filter((v) => normalizeLang(v.lang).startsWith('en') && !ROBOTIC_VOICE_RE.test(v.name || ''));
+      const accentMatches = allEnglish.filter((v) => normalizeLang(v.lang) === target);
+      const accentPool = accentMatches.length > 0 ? accentMatches : allEnglish;
+
+      let genderPool = accentPool;
+      if (state.selectedGender !== 'all') {
+        const matchedAccentGender = accentPool.filter((v) => detectVoiceGender(v) === state.selectedGender);
+        if (matchedAccentGender.length > 0) {
+          genderPool = matchedAccentGender;
+        } else {
+          const matchedAnyGender = allEnglish.filter((v) => detectVoiceGender(v) === state.selectedGender);
+          if (matchedAnyGender.length > 0) genderPool = matchedAnyGender;
+        }
+      }
+
+      const sorted = [...genderPool].sort((a, b) => scoreEnglishVoice(b, state.selectedAccent) - scoreEnglishVoice(a, state.selectedAccent));
+
+      state.rankedVoices = sorted;
+      voiceSelect.innerHTML = '';
+
+      const genderLabel = state.selectedGender === 'female' ? '女性' : state.selectedGender === 'male' ? '男性' : '';
+      const autoOpt = document.createElement('option');
+      autoOpt.value = '';
+      autoOpt.textContent = sorted.length > 0
+        ? `自動（${formatVoiceLabel(sorted[0])}）`
+        : `自動（${(ACCENT_META[state.selectedAccent] || {}).label || '英語'}${genderLabel ? '・' + genderLabel : ''}）`;
+      voiceSelect.appendChild(autoOpt);
+
+      sorted.slice(0, 15).forEach((v) => {
+        const opt = document.createElement('option');
+        opt.value = v.voiceURI;
+        opt.textContent = formatVoiceLabel(v);
+        voiceSelect.appendChild(opt);
+      });
+
+      if (state.selectedVoiceURI && sorted.some((v) => v.voiceURI === state.selectedVoiceURI)) {
+        voiceSelect.value = state.selectedVoiceURI;
+      } else {
+        voiceSelect.value = '';
+        state.selectedVoiceURI = '';
+      }
+    }
+
+    function getSelectedEnglishVoice() {
+      if (!('speechSynthesis' in window)) return null;
+      if (state.rankedVoices.length === 0) populateVoices();
+      if (state.selectedVoiceURI) {
+        const picked = state.rankedVoices.find((v) => v.voiceURI === state.selectedVoiceURI);
+        if (picked) return picked;
+      }
+      return state.rankedVoices[0] || null;
+    }
+
+    function prepareNaturalEnglishText(rawText) {
+      return rawText
+        .replace(/\(\s*_{2,}\s*\)/g, ' ... ')
+        .replace(/\(\s*[A-Z]\s*\)/g, ' ... ')
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/~/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function prepareContinuousNativeText(rawText) {
+      return prepareNaturalEnglishText(rawText)
+        .replace(/—/g, ', ')
+        .replace(/\s+,/g, ',')
+        .trim();
+    }
+
+    async function fetchOpenAiSpeechUrl(text) {
+      const cfg = state.aiVoice;
+      const accentName = (ACCENT_META[state.selectedAccent] || ACCENT_META['en-US']).enName;
+      const cacheKey = `${cfg.model}|${cfg.voice}|${state.selectedAccent}|${text}`;
+      if (state.audioCache.has(cacheKey)) {
+        return state.audioCache.get(cacheKey);
+      }
+
+      const body = {
+        model: cfg.model || 'gpt-4o-mini-tts',
+        voice: cfg.voice || 'coral',
+        input: prepareContinuousNativeText(text),
+        response_format: 'mp3'
+      };
+      if (body.model === 'gpt-4o-mini-tts') {
+        body.instructions = `Speak in completely natural, fluent, conversational native ${accentName} with authentic pronunciation, connected speech, and smooth intonation.`;
+      }
+
+      const res = await fetch('https://api.openai.com/v1/audio/speech', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${cfg.apiKey.trim()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        throw new Error(`OpenAI TTS HTTP ${res.status}`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      state.audioCache.set(cacheKey, url);
+      return url;
+    }
+
+    async function speakWithOpenAiQueue(items, statusLabel, sessionId) {
+      const queue = [];
+      items.forEach((item, idx) => {
+        const cleaned = prepareNaturalEnglishText(item);
+        if (!cleaned) return;
+        queue.push({ text: cleaned, pauseAfter: state.shadowMode ? 1700 : (idx < items.length - 1 ? 650 : 0) });
+        if (state.shadowMode) {
+          queue.push({ text: cleaned, pauseAfter: idx < items.length - 1 ? 900 : 0 });
+        }
+      });
+
+      if (queue.length === 0) return;
+      setPlayingUI(true, statusLabel || '🎙 AIネイティブ音声で再生中… 停止');
+
+      state.playerQueue = queue.map((q) => q.text);
+      for (let i = 0; i < queue.length; i++) {
+        if (sessionId !== state.speechSessionId) return;
+        state.playerIndex = i;
+        state.isPaused = false;
+        renderNrCaption(queue[i].text);
+        nrTrackCounter.textContent = `${i + 1} / ${queue.length}`;
+        setPlayingUI(true, statusLabel || '🎙 AIネイティブ音声で再生中… 停止');
+        try {
+          const audioUrl = await fetchOpenAiSpeechUrl(queue[i].text);
+          if (sessionId !== state.speechSessionId) return;
+
+          await new Promise((resolve, reject) => {
+            const audio = state.currentAudioEl || new Audio();
+            audio.setAttribute('playsinline', '');
+            audio.src = audioUrl;
+            audio.playbackRate = state.speechRate;
+            state.currentAudioEl = audio;
+            audio.onended = () => {
+              resolve();
+            };
+            audio.onerror = () => {
+              reject(new Error('Audio playback failed'));
+            };
+            audio.play().catch(reject);
+          });
+
+          if (sessionId !== state.speechSessionId) return;
+          if (queue[i].pauseAfter > 0) {
+            await new Promise((resolve) => {
+              const t = setTimeout(resolve, queue[i].pauseAfter);
+              state.speechTimers.push(t);
+            });
+          }
+        } catch (err) {
+          if (sessionId !== state.speechSessionId) return;
+          showToast('AI音声の取得に失敗したためブラウザ音声に切り替えます');
+          speakWithBrowserQueue(items.slice(Math.floor(i / (state.shadowMode ? 2 : 1))), statusLabel, sessionId);
+          return;
+        }
+      }
+
+      if (sessionId === state.speechSessionId) {
+        setPlayingUI(false);
+      }
+    }
+
+    function speakWithBrowserQueue(items, statusLabel, sessionId) {
+      if (!('speechSynthesis' in window)) {
+        showToast('このブラウザでは音声読み上げに対応していません。');
+        return;
+      }
+      const voice = getSelectedEnglishVoice();
+      const baseRate = state.speechRate;
+
+      const queue = [];
+      items.forEach((rawItem, itemIdx) => {
+        const text = prepareContinuousNativeText(rawItem);
+        if (!text) return;
+        queue.push({
+          text,
+          rate: baseRate,
+          pauseAfter: state.shadowMode ? 1600 : (itemIdx < items.length - 1 ? 550 : 0)
+        });
+        if (state.shadowMode) {
+          queue.push({
+            text,
+            rate: Math.max(0.75, baseRate - 0.04),
+            pauseAfter: itemIdx < items.length - 1 ? 800 : 0
+          });
+        }
+      });
+
+      if (queue.length === 0) return;
+      const accentName = (ACCENT_META[state.selectedAccent] || {}).label || '英語';
+      setPlayingUI(true, statusLabel || `🔊 ${accentName}で再生中… 停止`);
+
+      state.playerQueue = queue.map((q) => q.text);
+
+      function playAt(index) {
+        if (sessionId !== state.speechSessionId) return;
+        if (index >= queue.length) {
+          setPlayingUI(false);
+          return;
+        }
+        state.playerIndex = index;
+        state.isPaused = false;
+        const item = queue[index];
+        renderNrCaption(item.text);
+        nrTrackCounter.textContent = `${index + 1} / ${queue.length}`;
+        setPlayingUI(true, statusLabel);
+
+        const utter = new SpeechSynthesisUtterance(item.text);
+        if (voice) {
+          utter.voice = voice;
+          utter.lang = voice.lang || state.selectedAccent;
+        } else {
+          utter.lang = state.selectedAccent;
+        }
+        utter.rate = state.speechRate;
+        utter.pitch = 1.0;
+
+        utter.onboundary = (ev) => {
+          if (sessionId !== state.speechSessionId) return;
+          if (typeof ev.charIndex === 'number') {
+            highlightWordAtCharIndex(ev.charIndex);
+          }
+        };
+
+        utter.onend = () => {
+          if (sessionId !== state.speechSessionId) return;
+          state.currentTokens.forEach((t) => t.el.classList.remove('nr-word-active'));
+          if (item.pauseAfter > 0) {
+            const t = setTimeout(() => playAt(index + 1), item.pauseAfter);
+            state.speechTimers.push(t);
+          } else {
+            playAt(index + 1);
+          }
+        };
+        utter.onerror = () => {
+          if (sessionId === state.speechSessionId) setPlayingUI(false);
+        };
+        window.speechSynthesis.speak(utter);
+      }
+
+      playAt(0);
+    }
+
+    function speakChunksQueue(items, statusLabel) {
+      stopSpeech();
+      const sessionId = state.speechSessionId;
+      if (state.aiVoice.engine === 'openai' && state.aiVoice.apiKey && state.aiVoice.apiKey.trim()) {
+        speakWithOpenAiQueue(items, statusLabel, sessionId);
+      } else {
+        speakWithBrowserQueue(items, statusLabel, sessionId);
+      }
+    }
+
+    function speakEnglish(rawText) {
+      if (!rawText || !rawText.trim()) return;
+      speakChunksQueue([rawText]);
+    }
+
+    if ('speechSynthesis' in window) {
+      populateVoices();
+      if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+        window.speechSynthesis.onvoiceschanged = populateVoices;
+      }
+      setTimeout(populateVoices, 400);
+    }
+
+    function getCurrentArticle() {
+      return state.articles.find((a) => a.id === state.selectedArticleId) || state.articles[0];
+    }
+
+    function getQuizQuestionsPool() {
+      const targetArticles = state.quizAllArticles ? state.articles : [getCurrentArticle()];
+      const list = [];
+      targetArticles.forEach((art) => {
+        if (!art) return;
+        (art.questions || []).forEach((q) => {
+          list.push({ ...q, articleTitle: art.shortTitle || art.title });
+        });
+      });
+      return list;
+    }
+
+    function renderArticleSelector() {
+      articleSelect.innerHTML = '';
+      state.articles.forEach((a) => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.textContent = `${a.shortTitle || a.title}（フレーズ ${(a.phrases || []).length}件）`;
+        articleSelect.appendChild(opt);
+      });
+      articleSelect.value = state.selectedArticleId;
+    }
+
+    function renderSummary() {
+      stopSpeech();
+      const art = getCurrentArticle();
+      if (!art) return;
+
+      metaTags.innerHTML = '';
+      (art.tags || []).forEach((tag) => {
+        const span = document.createElement('span');
+        span.className = 'px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700';
+        span.textContent = tag;
+        metaTags.appendChild(span);
+      });
+
+      artTitle.textContent = art.title;
+      artMeta.textContent = art.meta || '';
+      artOneliner.textContent = art.oneLiner || '';
+
+      artSummaryList.innerHTML = '';
+      (art.summaryPoints || []).forEach((pt) => {
+        const li = document.createElement('li');
+        li.className = 'flex items-start gap-2.5';
+        li.innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2 shrink-0"></span>
+          <div><span class="font-semibold text-zinc-100">${pt.label}：</span><span>${pt.text}</span></div>
+        `;
+        artSummaryList.appendChild(li);
+      });
+
+      if (art.quote && art.quote.text) {
+        artQuoteText.textContent = `"${art.quote.text}"`;
+        artQuoteAuthor.textContent = art.quote.author ? `— ${art.quote.author}` : '';
+        artQuoteWrap.classList.remove('hidden');
+      } else {
+        artQuoteWrap.classList.add('hidden');
+      }
+
+      const phrases = art.phrases || [];
+      phraseCountBadge.textContent = `${phrases.length} フレーズ`;
+      phrasesList.innerHTML = '';
+      phrases.forEach((p) => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm sm:text-base font-bold text-emerald-300">${p.phrase}</span>
+              <span class="text-xs sm:text-sm text-zinc-200 font-medium">${p.meaning}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" class="speak-phrase-btn speak-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-semibold">
+                <span aria-hidden="true">🔊</span><span>語句</span>
+              </button>
+              <button type="button" class="speak-example-btn speak-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+                <span aria-hidden="true">🔊</span><span>例文</span>
+              </button>
+            </div>
+          </div>
+          <p class="text-xs sm:text-sm text-zinc-300 italic leading-relaxed">${p.example}</p>
+          ${p.exampleJa ? `<p class="text-xs text-zinc-400 mt-1 leading-relaxed">${p.exampleJa}</p>` : ''}
+          ${(p.enDef || (p.synonyms && p.synonyms.length)) ? `
+            <div class="mt-2.5 pt-2.5 border-t border-zinc-800/80 space-y-1.5 text-xs">
+              ${p.enDef ? `<div class="text-zinc-400"><span class="font-semibold text-zinc-300">英英定義：</span>${p.enDef}</div>` : ''}
+              ${(p.synonyms && p.synonyms.length) ? `<div class="flex flex-wrap items-center gap-1.5"><span class="font-semibold text-zinc-300">類義語：</span>${p.synonyms.map(s => `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300">${s}</span>`).join('')}</div>` : ''}
+            </div>
+          ` : ''}
+        `;
+        card.querySelector('.speak-phrase-btn').addEventListener('click', () => {
+          speakEnglish(p.speakPhrase || p.phrase);
+        });
+        card.querySelector('.speak-example-btn').addEventListener('click', () => {
+          speakEnglish(p.example);
+        });
+        phrasesList.appendChild(card);
+      });
+
+      if (art.memoryTip) {
+        artMemoryTip.textContent = art.memoryTip;
+        artMemoryTipWrap.classList.remove('hidden');
+      } else {
+        artMemoryTipWrap.classList.add('hidden');
+      }
+
+      renderPerspectives();
+    }
+
+    function renderPerspectives() {
+      const art = getCurrentArticle();
+      const perspectives = (art && art.perspectives) || [];
+      toggleJpBtn.textContent = state.hidePerspectiveJa ? '日本語を表示' : '日本語を隠す';
+      perspectivesList.innerHTML = '';
+
+      perspectives.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'p-4 rounded-xl bg-zinc-950 border border-zinc-800';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <span class="text-xs sm:text-sm font-bold text-emerald-300">${item.title}</span>
+            <button type="button" class="speak-persp-btn speak-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold">
+              <span aria-hidden="true">🔊</span><span>英語を読み上げ</span>
+            </button>
+          </div>
+          <p class="text-sm text-zinc-100 leading-relaxed mb-2.5 italic">"${item.en}"</p>
+          <p class="${state.hidePerspectiveJa ? 'hidden ' : ''}text-xs sm:text-sm text-zinc-400 leading-relaxed pt-2 border-t border-zinc-800/80">${item.ja}</p>
+        `;
+        card.querySelector('.speak-persp-btn').addEventListener('click', () => {
+          speakEnglish(item.en);
+        });
+        perspectivesList.appendChild(card);
+      });
+    }
+
+    // Quiz Logic
+    function updateQuizCategoryCounts() {
+      const pool = getQuizQuestionsPool();
+      const phrasesCount = pool.filter((q) => q.category === 'phrases').length;
+      const discussionCount = pool.filter((q) => q.category === 'discussion').length;
+      catAllBtn.textContent = `すべて (${pool.length}問)`;
+      catPhrasesBtn.textContent = `重要フレーズ (${phrasesCount}問)`;
+      catDiscussionBtn.textContent = `別視点の英訳 (${discussionCount}問)`;
+
+      toggleAllArticlesQuizBtn.textContent = state.quizAllArticles
+        ? `全記事を横断出題: ON (${state.articles.length}記事)`
+        : '全記事を横断出題: OFF';
+      toggleAllArticlesQuizBtn.className = state.quizAllArticles
+        ? 'px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-xs font-semibold text-emerald-300 transition'
+        : 'px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition';
+
+      shuffleQuizBtn.textContent = state.quizRandomize ? '🔀 ランダム出題: ON' : '🔀 ランダム出題: OFF';
+      shuffleQuizBtn.className = state.quizRandomize
+        ? 'px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/15 text-xs font-semibold text-emerald-300 transition'
+        : 'px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-300 transition';
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startQuiz(questionsSubset) {
+      stopSpeech();
+      state.activeQuestions = state.quizRandomize ? shuffleArray(questionsSubset) : [...questionsSubset];
+      state.currentIndex = 0;
+      state.answered = false;
+      state.answers = [];
+      resultCard.classList.add('hidden');
+      questionCard.classList.remove('hidden');
+      progressContainer.classList.remove('hidden');
+      renderQuestion();
+    }
+
+    function selectQuizCategory(cat) {
+      state.selectedCategory = cat;
+      catButtons.forEach((btn) => {
+        const isSelected = btn.dataset.cat === cat;
+        btn.className = isSelected
+          ? 'cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white'
+          : 'cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-zinc-900 text-zinc-300 border border-zinc-800 hover:bg-zinc-800';
+      });
+      const pool = getQuizQuestionsPool();
+      const subset = cat === 'all' ? pool : pool.filter((q) => q.category === cat);
+      startQuiz(subset);
+    }
+
+    function renderQuestion() {
+      stopSpeech();
+      const total = state.activeQuestions.length;
+      if (total === 0) {
+        progressLabel.textContent = '問題 0 / 0';
+        scoreLabel.textContent = '正解数: 0';
+        progressBar.style.width = '0%';
+        qPrompt.textContent = 'このカテゴリには問題がまだ登録されていません。';
+        qContextWrap.classList.add('hidden');
+        optionsList.innerHTML = '';
+        feedbackBox.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        return;
+      }
+
+      const q = state.activeQuestions[state.currentIndex];
+      const correctCount = state.answers.filter((a) => a.isCorrect).length;
+
+      progressLabel.textContent = `問題 ${state.currentIndex + 1} / ${total}`;
+      scoreLabel.textContent = `正解数: ${correctCount}`;
+      const pct = Math.round(((state.currentIndex + (state.answered ? 1 : 0)) / total) * 100);
+      progressBar.style.width = `${Math.max(pct, 8)}%`;
+
+      qBadge.textContent = q.categoryLabel;
+      qArticleTag.textContent = q.articleTitle || '';
+      qNumber.textContent = `Q${state.currentIndex + 1}`;
+      qPrompt.textContent = q.prompt;
+
+      if (q.context) {
+        qContext.textContent = q.context;
+        speakQuestionLabel.textContent = '英文を読み上げる（空欄あり）';
+        qContextWrap.classList.remove('hidden');
+      } else {
+        qContextWrap.classList.add('hidden');
+      }
+
+      optionsList.innerHTML = '';
+      q.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className =
+          'option-btn w-full text-left px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-emerald-500/60 hover:bg-zinc-900 text-sm sm:text-base text-zinc-100 flex items-start gap-3';
+        const letter = String.fromCharCode(65 + idx);
+        btn.innerHTML = `<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 text-xs font-bold shrink-0 mt-0.5">${letter}</span><span>${optText}</span>`;
+        btn.addEventListener('click', () => handleAnswer(idx));
+        optionsList.appendChild(btn);
+      });
+
+      feedbackBox.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+      state.answered = false;
+    }
+
+    function handleAnswer(selectedIdx) {
+      if (state.answered) return;
+      state.answered = true;
+
+      const q = state.activeQuestions[state.currentIndex];
+      const isCorrect = selectedIdx === q.answer;
+      state.answers.push({ question: q, selectedIndex: selectedIdx, isCorrect });
+
+      const buttons = optionsList.querySelectorAll('button');
+      buttons.forEach((btn, idx) => {
+        btn.disabled = true;
+        if (idx === q.answer) {
+          btn.className =
+            'option-btn w-full text-left px-4 py-3 rounded-xl border-2 border-emerald-500 bg-emerald-500/15 text-sm sm:text-base text-emerald-200 font-medium flex items-start gap-3';
+        } else if (idx === selectedIdx && !isCorrect) {
+          btn.className =
+            'option-btn w-full text-left px-4 py-3 rounded-xl border-2 border-rose-500 bg-rose-500/15 text-sm sm:text-base text-rose-200 flex items-start gap-3';
+        } else {
+          btn.className =
+            'option-btn w-full text-left px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950/60 text-sm sm:text-base text-zinc-500 flex items-start gap-3';
+        }
+      });
+
+      if (q.completedSentence) {
+        qContext.textContent = q.completedSentence;
+        speakQuestionLabel.textContent = '完成文を読み上げる';
+      }
+
+      const correctCount = state.answers.filter((a) => a.isCorrect).length;
+      scoreLabel.textContent = `正解数: ${correctCount}`;
+      const pct = Math.round(((state.currentIndex + 1) / state.activeQuestions.length) * 100);
+      progressBar.style.width = `${pct}%`;
+
+      feedbackBox.classList.remove('hidden');
+      if (isCorrect) {
+        feedbackBox.className = 'mt-5 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-sm leading-relaxed';
+        feedbackTitle.className = 'font-bold text-emerald-300';
+        feedbackTitle.textContent = '正解！';
+      } else {
+        feedbackBox.className = 'mt-5 p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-sm leading-relaxed';
+        feedbackTitle.className = 'font-bold text-rose-300';
+        feedbackTitle.textContent = `不正解（正解は ${String.fromCharCode(65 + q.answer)}）`;
+      }
+
+      if (q.translation) {
+        feedbackTranslation.innerHTML = `<span class="font-semibold text-emerald-300">日本語訳：</span>${q.translation}`;
+        feedbackTranslation.classList.remove('hidden');
+      } else {
+        feedbackTranslation.classList.add('hidden');
+        feedbackTranslation.textContent = '';
+      }
+      feedbackText.textContent = q.explanation;
+
+      nextBtn.textContent =
+        state.currentIndex === state.activeQuestions.length - 1 ? '結果を見る →' : '次の問題へ →';
+      nextBtn.classList.remove('hidden');
+    }
+
+    function showResults() {
+      stopSpeech();
+      questionCard.classList.add('hidden');
+      progressContainer.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+
+      const total = state.answers.length;
+      const correct = state.answers.filter((a) => a.isCorrect).length;
+      const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+      resultScoreText.textContent = `${correct} / ${total} 問正解 (${pct}%)`;
+      if (pct === 100) {
+        resultMessage.textContent = '全問正解です！重要フレーズも別視点の英語表現もしっかり定着しています。';
+      } else if (pct >= 75) {
+        resultMessage.textContent = 'かなり定着しています。間違えた箇所だけ復習すると盤石です。';
+      } else {
+        resultMessage.textContent = '間違えた問題や記事要約・音声読み上げを見直して、もう一度チャレンジしてみましょう。';
+      }
+
+      const categories = [
+        { key: 'phrases', label: '重要フレーズ' },
+        { key: 'discussion', label: '別視点の英訳' }
+      ];
+      categoryBreakdown.innerHTML = '';
+      categories.forEach((cat) => {
+        const items = state.answers.filter((a) => a.question.category === cat.key);
+        if (items.length === 0) return;
+        const ok = items.filter((a) => a.isCorrect).length;
+        const div = document.createElement('div');
+        div.className = 'p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 text-center';
+        div.innerHTML = `
+          <div class="text-xs font-medium text-zinc-400 mb-1">${cat.label}</div>
+          <div class="text-lg font-bold text-zinc-100">${ok} / ${items.length}</div>
+        `;
+        categoryBreakdown.appendChild(div);
+      });
+
+      const wrongQuestions = state.answers.filter((a) => !a.isCorrect).map((a) => a.question);
+      if (wrongQuestions.length > 0) {
+        retryWrongBtn.classList.remove('hidden');
+        retryWrongBtn.textContent = `間違えた問題だけやり直す (${wrongQuestions.length}問)`;
+      } else {
+        retryWrongBtn.classList.add('hidden');
+      }
+
+      reviewList.innerHTML = '';
+      state.answers.forEach((entry, idx) => {
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border text-sm ${
+          entry.isCorrect ? 'border-emerald-500/25 bg-emerald-500/5' : 'border-rose-500/25 bg-rose-500/5'
+        }`;
+        const badge = entry.isCorrect
+          ? '<span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/20 text-emerald-300">正解</span>'
+          : '<span class="inline-block px-2 py-0.5 rounded text-xs font-bold bg-rose-500/20 text-rose-300">不正解</span>';
+        const correctOpt = entry.question.options[entry.question.answer];
+        const sentenceToRead = entry.question.completedSentence || entry.question.context || '';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <div class="flex items-center gap-2">
+              ${badge}
+              <span class="text-xs font-semibold text-zinc-400">Q${idx + 1} · ${entry.question.categoryLabel}</span>
+            </div>
+            ${sentenceToRead ? '<button type="button" class="review-speak-btn speak-btn inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-semibold text-emerald-300">🔊 読み上げ</button>' : ''}
+          </div>
+          <div class="font-semibold text-zinc-100 mb-1">${entry.question.prompt}</div>
+          ${sentenceToRead ? `<div class="text-xs text-zinc-300 italic mb-1">${sentenceToRead}</div>` : ''}
+          <div class="text-xs text-emerald-300 font-medium mb-1">正解: ${correctOpt}</div>
+          ${entry.question.translation ? `<div class="text-xs text-zinc-300 mb-1"><span class="font-semibold text-zinc-200">日本語訳：</span>${entry.question.translation}</div>` : ''}
+          <div class="text-xs text-zinc-400 leading-relaxed">${entry.question.explanation}</div>
+        `;
+
+        const speakBtn = card.querySelector('.review-speak-btn');
+        if (speakBtn) {
+          speakBtn.addEventListener('click', () => speakEnglish(sentenceToRead));
+        }
+        reviewList.appendChild(card);
+      });
+    }
+
+    // Flashcards Logic
+    function getCardKey(art, item) {
+      return `${art.id}::${item.phrase}`;
+    }
+
+    function getFilteredFlashcards() {
+      const art = getCurrentArticle();
+      const all = (art && art.phrases) || [];
+      if (state.cardFilter === 'mastered') {
+        return all.filter((p) => state.cardProgress[getCardKey(art, p)] === 'known');
+      }
+      if (state.cardFilter === 'unmastered') {
+        return all.filter((p) => state.cardProgress[getCardKey(art, p)] !== 'known');
+      }
+      return all;
+    }
+
+    function updateCardMasteryUI() {
+      const art = getCurrentArticle();
+      const all = (art && art.phrases) || [];
+      const masteredCount = all.filter((p) => state.cardProgress[getCardKey(art, p)] === 'known').length;
+      const unmasteredCount = all.length - masteredCount;
+      const pct = all.length > 0 ? Math.round((masteredCount / all.length) * 100) : 0;
+
+      cardMasteryLabel.textContent = `習得 ${masteredCount} / ${all.length} (${pct}%)`;
+      cardMasteryBar.style.width = `${pct}%`;
+
+      cfAllBtn.textContent = `すべて (${all.length})`;
+      cfUnmasteredBtn.textContent = `未習得・要復習 (${unmasteredCount})`;
+      cfMasteredBtn.textContent = `習得済み (${masteredCount})`;
+
+      cfButtons.forEach((btn) => {
+        const active = btn.dataset.filter === state.cardFilter;
+        btn.className = active
+          ? 'cf-btn px-3 py-1 rounded-full text-xs font-semibold bg-emerald-600 text-white'
+          : 'cf-btn px-3 py-1 rounded-full text-xs font-semibold bg-zinc-950 text-zinc-300 border border-zinc-800 hover:bg-zinc-800';
+      });
+    }
+
+    function renderFlashcard() {
+      stopSpeech();
+      const art = getCurrentArticle();
+      updateCardMasteryUI();
+      const cards = getFilteredFlashcards();
+
+      if (cards.length === 0) {
+        cardCounter.textContent = '0 / 0';
+        cardArticleLabel.textContent = art ? (art.shortTitle || art.title) : '';
+        cardSideLabel.textContent = state.cardFilter === 'unmastered' ? 'Complete!' : 'Empty';
+        cardMainText.textContent = state.cardFilter === 'unmastered'
+          ? 'このアーティクルのフレーズはすべて習得済みです！'
+          : '該当するフレーズがありません';
+        cardSubText.textContent = '上のフィルターを「すべて」に切り替えて復習できます。';
+        cardExampleJa.classList.add('hidden');
+        cardDetailsWrap.classList.add('hidden');
+        speakCardBtn.classList.add('hidden');
+        cardRatingRow.classList.add('hidden');
+        cardStatusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300';
+        cardStatusBadge.textContent = state.cardFilter === 'unmastered' ? '🎉 完了' : '0件';
+        return;
+      }
+
+      speakCardBtn.classList.remove('hidden');
+      cardRatingRow.classList.remove('hidden');
+      if (state.cardIndex >= cards.length) state.cardIndex = 0;
+
+      const item = cards[state.cardIndex];
+      const status = state.cardProgress[getCardKey(art, item)];
+      if (status === 'known') {
+        cardStatusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        cardStatusBadge.textContent = '✅ 習得済み';
+      } else if (status === 'review') {
+        cardStatusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30';
+        cardStatusBadge.textContent = '🔁 要復習';
+      } else {
+        cardStatusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-800 text-zinc-300';
+        cardStatusBadge.textContent = '未チェック';
+      }
+
+      cardCounter.textContent = `${state.cardIndex + 1} / ${cards.length}`;
+      cardArticleLabel.textContent = art.shortTitle || art.title;
+
+      if (!state.cardFlipped) {
+        cardSideLabel.textContent = 'English Phrase（クリックで意味・英英定義・例文を表示）';
+        cardMainText.textContent = item.phrase;
+        cardSubText.textContent = '意味・類義語・使い方を思い浮かべてみましょう';
+        cardExampleJa.classList.add('hidden');
+        cardDetailsWrap.classList.add('hidden');
+        speakCardLabel.textContent = 'フレーズを読み上げる';
+        flipCardBtn.textContent = '答えをめくる';
+      } else {
+        cardSideLabel.textContent = 'Meaning, Definition & Example';
+        cardMainText.textContent = item.meaning;
+        cardSubText.textContent = `"${item.example}"`;
+        if (item.exampleJa) {
+          cardExampleJa.textContent = item.exampleJa;
+          cardExampleJa.classList.remove('hidden');
+        } else {
+          cardExampleJa.classList.add('hidden');
+        }
+        const hasDef = Boolean(item.enDef);
+        const hasSyn = Array.isArray(item.synonyms) && item.synonyms.length > 0;
+        if (hasDef || hasSyn) {
+          cardDetailsWrap.classList.remove('hidden');
+          if (hasDef) {
+            cardEndefText.textContent = item.enDef;
+            cardEndefRow.classList.remove('hidden');
+          } else {
+            cardEndefRow.classList.add('hidden');
+          }
+          if (hasSyn) {
+            cardSynList.innerHTML = item.synonyms
+              .map((s) => `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-200">${s}</span>`)
+              .join('');
+            cardSynRow.classList.remove('hidden');
+          } else {
+            cardSynRow.classList.add('hidden');
+          }
+        } else {
+          cardDetailsWrap.classList.add('hidden');
+        }
+        speakCardLabel.textContent = '例文を読み上げる';
+        flipCardBtn.textContent = 'フレーズに戻る';
+      }
+    }
+
+    function markCurrentCard(status) {
+      const art = getCurrentArticle();
+      const cards = getFilteredFlashcards();
+      const item = cards[state.cardIndex];
+      if (!art || !item) return;
+
+      state.cardProgress[getCardKey(art, item)] = status;
+      saveCardProgress(state.cardProgress);
+
+      const nextCards = getFilteredFlashcards();
+      if (nextCards.length === 0) {
+        state.cardIndex = 0;
+      } else if (state.cardFilter === 'unmastered' && status === 'known') {
+        state.cardIndex = state.cardIndex % nextCards.length;
+      } else {
+        state.cardIndex = (state.cardIndex + 1) % nextCards.length;
+      }
+      state.cardFlipped = false;
+      renderFlashcard();
+      showToast(status === 'known' ? '✅ 習得済みに記録しました' : '🔁 要復習に記録しました');
+    }
+
+    function switchMode(newMode) {
+      stopSpeech();
+      state.mode = newMode;
+      const activeCls = 'px-3 py-1.5 rounded-md bg-zinc-800 text-zinc-100 shadow-sm';
+      const inactiveCls = 'px-3 py-1.5 rounded-md text-zinc-400 hover:text-zinc-200';
+
+      summaryView.classList.toggle('hidden', newMode !== 'summary');
+      quizView.classList.toggle('hidden', newMode !== 'quiz');
+      cardsView.classList.toggle('hidden', newMode !== 'cards');
+
+      tabSummary.className = newMode === 'summary' ? activeCls : inactiveCls;
+      tabQuiz.className = newMode === 'quiz' ? activeCls : inactiveCls;
+      tabCards.className = newMode === 'cards' ? activeCls : inactiveCls;
+
+      if (newMode === 'quiz') {
+        updateQuizCategoryCounts();
+        selectQuizCategory(state.selectedCategory);
+      } else if (newMode === 'cards') {
+        state.cardIndex = 0;
+        state.cardFlipped = false;
+        renderFlashcard();
+      }
+    }
+
+    function renderRegisteredArticlesList() {
+      registeredArticlesList.innerHTML = '';
+      state.articles.forEach((a) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs';
+        row.innerHTML = `
+          <div class="min-w-0">
+            <div class="font-semibold text-zinc-100 truncate">${a.shortTitle || a.title}</div>
+            <div class="text-zinc-400">フレーズ ${(a.phrases || []).length}件 / 問題 ${(a.questions || []).length}問</div>
+          </div>
+          <span class="text-[11px] text-zinc-500 shrink-0">${a.addedAt || ''}</span>
+        `;
+        registeredArticlesList.appendChild(row);
+      });
+    }
+
+    // Event Listeners
+    tabSummary.addEventListener('click', () => switchMode('summary'));
+    tabQuiz.addEventListener('click', () => switchMode('quiz'));
+    tabCards.addEventListener('click', () => switchMode('cards'));
+
+    articleSelect.addEventListener('change', (e) => {
+      state.selectedArticleId = e.target.value;
+      state.cardIndex = 0;
+      state.cardFlipped = false;
+      renderSummary();
+      if (state.mode === 'quiz') {
+        updateQuizCategoryCounts();
+        selectQuizCategory(state.selectedCategory);
+      } else if (state.mode === 'cards') {
+        renderFlashcard();
+      }
+    });
+
+    voiceSelect.addEventListener('change', (e) => {
+      state.selectedVoiceURI = e.target.value;
+      saveVoicePref(state.selectedVoiceURI);
+      speakEnglish('Think about this for a moment — how we speak changes how ideas land.');
+      showToast('読み上げ音声を切り替えました');
+    });
+
+    accentButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedAccent = btn.dataset.accent;
+        state.selectedVoiceURI = '';
+        saveAccentPref(state.selectedAccent);
+        saveVoicePref('');
+        syncAccentButtonsUI();
+    syncGenderButtonsUI();
+    syncSpeedControlsUI();
+        populateVoices();
+        const label = (ACCENT_META[state.selectedAccent] || {}).label || state.selectedAccent;
+        showToast(`発音を ${label} に切り替えました`);
+        speakEnglish('Hello, let us practice natural English pronunciation together.');
+      });
+    });
+
+    genderButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.selectedGender = btn.dataset.gender;
+        state.selectedVoiceURI = '';
+        saveGenderPref(state.selectedGender);
+        saveVoicePref('');
+        if (state.selectedGender === 'female') {
+          state.aiVoice.voice = 'coral';
+          saveAiVoiceConfig(state.aiVoice);
+        } else if (state.selectedGender === 'male') {
+          state.aiVoice.voice = 'onyx';
+          saveAiVoiceConfig(state.aiVoice);
+        }
+        syncGenderButtonsUI();
+        syncVoiceModalUI();
+        populateVoices();
+        const label = state.selectedGender === 'female' ? '女性音声' : state.selectedGender === 'male' ? '男性音声' : 'すべての話者';
+        showToast(`${label}に切り替えました`);
+        speakEnglish('Hello, let us practice natural English pronunciation together.');
+      });
+    });
+
+    toggleShadowBtn.addEventListener('click', () => {
+      state.shadowMode = !state.shadowMode;
+      toggleShadowBtn.textContent = state.shadowMode ? '🔁 シャドーイング反復: ON' : '🔁 シャドーイング反復: OFF';
+      toggleShadowBtn.className = state.shadowMode
+        ? 'px-2.5 py-1 rounded-lg border border-amber-500/40 bg-amber-500/15 text-amber-300 text-xs font-semibold transition'
+        : 'px-2.5 py-1 rounded-lg border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-zinc-300 text-xs font-semibold transition';
+      showToast(state.shadowMode ? 'シャドーイング反復をONにしました（間のあとに1回リピート）' : 'シャドーイング反復をOFFにしました');
+    });
+
+    globalStopBtn.addEventListener('click', () => {
+      stopSpeech();
+      showToast('読み上げを停止しました');
+    });
+
+    playAllPhrasesBtn.addEventListener('click', () => {
+      const art = getCurrentArticle();
+      const examples = ((art && art.phrases) || []).map((p) => p.example).filter(Boolean);
+      if (examples.length === 0) return;
+      speakChunksQueue(examples, `▶ 全例文を連続再生中（${examples.length}件）… 停止`);
+    });
+
+    playAllPerspBtn.addEventListener('click', () => {
+      const art = getCurrentArticle();
+      const speeches = ((art && art.perspectives) || []).map((p) => p.en).filter(Boolean);
+      if (speeches.length === 0) return;
+      speakChunksQueue(speeches, `🎤 別視点スピーチを連続再生中（${speeches.length}件）… 停止`);
+    });
+
+    rateButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.speechRate = parseFloat(btn.dataset.rate) || 1.0;
+        syncSpeedControlsUI();
+        if (state.currentAudioEl) state.currentAudioEl.playbackRate = state.speechRate;
+        showToast(`読み上げ速度を ${state.speechRate.toFixed(1)}x に変更しました`);
+      });
+    });
+
+    nrSpeedSlider.addEventListener('input', (e) => {
+      state.speechRate = parseFloat(e.target.value) || 1.0;
+      syncSpeedControlsUI();
+      if (state.currentAudioEl) state.currentAudioEl.playbackRate = state.speechRate;
+    });
+
+    nrStopBtn.addEventListener('click', () => {
+      stopSpeech();
+    });
+
+    nrPlayPauseBtn.addEventListener('click', () => {
+      if (state.currentAudioEl) {
+        if (state.currentAudioEl.paused) {
+          state.currentAudioEl.play();
+          state.isPaused = false;
+        } else {
+          state.currentAudioEl.pause();
+          state.isPaused = true;
+        }
+        nrPlayPauseBtn.textContent = state.isPaused ? '▶' : '⏸';
+        return;
+      }
+      if ('speechSynthesis' in window) {
+        const isIOS = /iP(hone|ad|od)/i.test(navigator.userAgent || '');
+        if (state.isPaused) {
+          state.isPaused = false;
+          if (isIOS && !window.speechSynthesis.paused) {
+            speakChunksQueue(state.playerQueue.slice(state.playerIndex));
+            return;
+          }
+          window.speechSynthesis.resume();
+        } else {
+          state.isPaused = true;
+          if (isIOS) {
+            window.speechSynthesis.cancel();
+          } else {
+            window.speechSynthesis.pause();
+          }
+        }
+        nrPlayPauseBtn.textContent = state.isPaused ? '▶' : '⏸';
+      }
+    });
+
+    nrPrevBtn.addEventListener('click', () => {
+      if (!state.playerQueue.length) return;
+      const nextIdx = Math.max(0, state.playerIndex - 1);
+      speakChunksQueue(state.playerQueue.slice(nextIdx));
+    });
+
+    nrNextBtn.addEventListener('click', () => {
+      if (!state.playerQueue.length) return;
+      const nextIdx = state.playerIndex + 1;
+      if (nextIdx >= state.playerQueue.length) {
+        stopSpeech();
+      } else {
+        speakChunksQueue(state.playerQueue.slice(nextIdx));
+      }
+    });
+
+    speakQuoteBtn.addEventListener('click', () => {
+      const art = getCurrentArticle();
+      if (art && art.quote && art.quote.text) {
+        speakEnglish(art.quote.text);
+      }
+    });
+
+    toggleJpBtn.addEventListener('click', () => {
+      state.hidePerspectiveJa = !state.hidePerspectiveJa;
+      renderPerspectives();
+    });
+
+    // Quiz Listeners
+    catButtons.forEach((btn) => {
+      btn.addEventListener('click', () => selectQuizCategory(btn.dataset.cat));
+    });
+
+    shuffleQuizBtn.addEventListener('click', () => {
+      state.quizRandomize = !state.quizRandomize;
+      updateQuizCategoryCounts();
+      selectQuizCategory(state.selectedCategory);
+      showToast(state.quizRandomize ? 'ランダム出題をONにしてシャッフルしました' : 'ランダム出題をOFFにしました');
+    });
+
+    toggleAllArticlesQuizBtn.addEventListener('click', () => {
+      state.quizAllArticles = !state.quizAllArticles;
+      updateQuizCategoryCounts();
+      selectQuizCategory(state.selectedCategory);
+    });
+
+    speakQuestionBtn.addEventListener('click', () => {
+      const q = state.activeQuestions[state.currentIndex];
+      if (!q) return;
+      const text = state.answered && q.completedSentence ? q.completedSentence : q.context;
+      speakEnglish(text);
+    });
+
+    speakCompleteBtn.addEventListener('click', () => {
+      const q = state.activeQuestions[state.currentIndex];
+      if (!q) return;
+      speakEnglish(q.completedSentence || q.context);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (state.currentIndex < state.activeQuestions.length - 1) {
+        state.currentIndex += 1;
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    });
+
+    restartInlineBtn.addEventListener('click', () => {
+      startQuiz(state.activeQuestions);
+    });
+
+    retryWrongBtn.addEventListener('click', () => {
+      const wrongQuestions = state.answers.filter((a) => !a.isCorrect).map((a) => a.question);
+      if (wrongQuestions.length > 0) {
+        startQuiz(wrongQuestions);
+      }
+    });
+
+    retryAllBtn.addEventListener('click', () => {
+      const pool = getQuizQuestionsPool();
+      const subset = state.selectedCategory === 'all' ? pool : pool.filter((q) => q.category === state.selectedCategory);
+      startQuiz(subset);
+    });
+
+    // Flashcard Listeners
+    flashcardArea.addEventListener('click', () => {
+      state.cardFlipped = !state.cardFlipped;
+      renderFlashcard();
+    });
+
+    flashcardArea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        state.cardFlipped = !state.cardFlipped;
+        renderFlashcard();
+      }
+    });
+
+    cfButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        state.cardFilter = btn.dataset.filter;
+        state.cardIndex = 0;
+        state.cardFlipped = false;
+        renderFlashcard();
+      });
+    });
+
+    resetCardProgressBtn.addEventListener('click', () => {
+      const art = getCurrentArticle();
+      if (!art) return;
+      (art.phrases || []).forEach((p) => {
+        delete state.cardProgress[getCardKey(art, p)];
+      });
+      saveCardProgress(state.cardProgress);
+      state.cardIndex = 0;
+      state.cardFlipped = false;
+      renderFlashcard();
+      showToast('この記事の習得記録をリセットしました');
+    });
+
+    markReviewBtn.addEventListener('click', () => markCurrentCard('review'));
+    markKnownBtn.addEventListener('click', () => markCurrentCard('known'));
+
+    speakCardBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const cards = getFilteredFlashcards();
+      const item = cards[state.cardIndex];
+      if (!item) return;
+      const text = state.cardFlipped ? item.example : (item.speakPhrase || item.phrase);
+      speakEnglish(text);
+    });
+
+    flipCardBtn.addEventListener('click', () => {
+      const cards = getFilteredFlashcards();
+      if (cards.length === 0) return;
+      state.cardFlipped = !state.cardFlipped;
+      renderFlashcard();
+    });
+
+    prevCardBtn.addEventListener('click', () => {
+      const cards = getFilteredFlashcards();
+      if (cards.length === 0) return;
+      state.cardIndex = (state.cardIndex - 1 + cards.length) % cards.length;
+      state.cardFlipped = false;
+      renderFlashcard();
+    });
+
+    nextCardBtn.addEventListener('click', () => {
+      const cards = getFilteredFlashcards();
+      if (cards.length === 0) return;
+      state.cardIndex = (state.cardIndex + 1) % cards.length;
+      state.cardFlipped = false;
+      renderFlashcard();
+    });
+
+    // Native Voice Modal UI & Listeners
+    function syncVoiceModalUI() {
+      const isOpenAi = state.aiVoice.engine === 'openai';
+      engineBrowserBtn.className = !isOpenAi
+        ? 'p-3 rounded-xl border border-emerald-500/40 bg-emerald-500/15 text-left transition'
+        : 'p-3 rounded-xl border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-left transition';
+      engineOpenaiBtn.className = isOpenAi
+        ? 'p-3 rounded-xl border border-sky-500/40 bg-sky-500/15 text-left transition'
+        : 'p-3 rounded-xl border border-zinc-700 bg-zinc-950 hover:bg-zinc-800 text-left transition';
+      openaiConfigPanel.classList.toggle('hidden', !isOpenAi);
+      openaiKeyInput.value = state.aiVoice.apiKey || '';
+      openaiVoiceSelect.value = state.aiVoice.voice || 'coral';
+      openaiModelSelect.value = state.aiVoice.model || 'gpt-4o-mini-tts';
+
+      openVoiceModalBtn.textContent =
+        isOpenAi && state.aiVoice.apiKey ? `🎙 AI音声: ${state.aiVoice.voice}` : '🎙 ネイティブ音声設定';
+    }
+
+    openVoiceModalBtn.addEventListener('click', () => {
+      syncAccentButtonsUI();
+    syncVoiceModalUI();
+      voiceModal.classList.remove('hidden');
+    });
+
+    closeVoiceModalBtn.addEventListener('click', () => {
+      voiceModal.classList.add('hidden');
+    });
+
+    voiceModal.addEventListener('click', (e) => {
+      if (e.target === voiceModal) voiceModal.classList.add('hidden');
+    });
+
+    engineBrowserBtn.addEventListener('click', () => {
+      state.aiVoice.engine = 'browser';
+      saveAiVoiceConfig(state.aiVoice);
+      syncVoiceModalUI();
+      showToast('ブラウザ音声（無料）に切り替えました');
+    });
+
+    engineOpenaiBtn.addEventListener('click', () => {
+      state.aiVoice.engine = 'openai';
+      saveAiVoiceConfig(state.aiVoice);
+      syncVoiceModalUI();
+    });
+
+    saveVoiceSettingsBtn.addEventListener('click', () => {
+      state.aiVoice.apiKey = openaiKeyInput.value.trim();
+      state.aiVoice.voice = openaiVoiceSelect.value;
+      state.aiVoice.model = openaiModelSelect.value;
+      state.aiVoice.engine = state.aiVoice.apiKey ? 'openai' : 'browser';
+      saveAiVoiceConfig(state.aiVoice);
+      syncVoiceModalUI();
+      voiceModal.classList.add('hidden');
+      showToast(state.aiVoice.apiKey ? `OpenAI AI音声（${state.aiVoice.voice}）を有効にしました` : 'APIキーが空のためブラウザ音声を使用します');
+    });
+
+    testOpenaiVoiceBtn.addEventListener('click', () => {
+      const key = openaiKeyInput.value.trim();
+      if (!key) {
+        showToast('先にOpenAI APIキーを入力してください');
+        return;
+      }
+      state.aiVoice.apiKey = key;
+      state.aiVoice.voice = openaiVoiceSelect.value;
+      state.aiVoice.model = openaiModelSelect.value;
+      state.aiVoice.engine = 'openai';
+      saveAiVoiceConfig(state.aiVoice);
+      syncVoiceModalUI();
+      speakEnglish('Think about this for a moment — how we frame an idea can change the entire conversation.');
+    });
+
+    // Data Modal Listeners
+    openDataModalBtn.addEventListener('click', () => {
+      renderRegisteredArticlesList();
+      dataModal.classList.remove('hidden');
+    });
+
+    closeDataModalBtn.addEventListener('click', () => {
+      dataModal.classList.add('hidden');
+    });
+
+    dataModal.addEventListener('click', (e) => {
+      if (e.target === dataModal) dataModal.classList.add('hidden');
+    });
+
+    copyJsonBtn.addEventListener('click', () => {
+      const text = JSON.stringify(state.articles, null, 2);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('記事データをクリップボードにコピーしました');
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    });
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('記事データをクリップボードにコピーしました');
+      } catch (e) {
+        showToast('コピーに失敗しました');
+      }
+      document.body.removeChild(ta);
+    }
+
+    importJsonBtn.addEventListener('click', () => {
+      const raw = importJsonInput.value.trim();
+      if (!raw) {
+        showToast('追加するJSONを貼り付けてください');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        const items = Array.isArray(parsed) ? parsed : [parsed];
+        let added = 0;
+        let lastAddedId = null;
+        items.forEach((item) => {
+          if (item && item.id && item.title) {
+            const idx = state.articles.findIndex((a) => a.id === item.id);
+            if (idx >= 0) {
+              state.articles[idx] = item;
+            } else {
+              state.articles.push(item);
+            }
+            lastAddedId = item.id;
+            added += 1;
+          }
+        });
+        if (added === 0) {
+          showToast('有効な記事データが見つかりませんでした');
+          return;
+        }
+        saveExtraArticles(state.articles);
+        importJsonInput.value = '';
+        if (lastAddedId) state.selectedArticleId = lastAddedId;
+        renderRegisteredArticlesList();
+        renderArticleSelector();
+        renderSummary();
+        if (state.mode === 'quiz') {
+          updateQuizCategoryCounts();
+          selectQuizCategory(state.selectedCategory);
+        } else if (state.mode === 'cards') {
+          renderFlashcard();
+        }
+        showToast(`${added}件の記事を追加・更新しました`);
+      } catch (err) {
+        showToast('JSONの形式が正しくありません');
+      }
+    });
+
+    // Initial render
+    syncVoiceModalUI();
+    renderArticleSelector();
+    renderSummary();
+    updateQuizCategoryCounts();
+  </script>
+</body>
+</html>
